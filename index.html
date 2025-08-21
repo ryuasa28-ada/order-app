@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="address-autofill.js"></script> <!-- 住所自動補完用のJavaScript -->
+  <title>ステップ式 注文フォーム 叩き台</title>
+  <style>
+    :root{
+      --brand:#3c3a38;--acc:#8e8e8e;--ok:#3b82f6;--danger:#ef4444;--bg:#fafafa;
+      --card:#ffffff;--ink:#222;--ink-weak:#666;--radius:14px;--shadow:0 6px 22px rgba(0,0,0,.08);
+    }
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'Hiragino Kaku Gothic ProN',Meiryo,'Noto Sans JP',sans-serif}
+    .app{max-width:980px;margin:24px auto;padding:0 16px 96px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    header .logo{font-weight:700;letter-spacing:.02em;color:#fff;background:var(--brand);padding:10px 14px;border-radius:10px}
+
+    /* stepper */
+    .stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 20px}
+    .step{
+      position:relative;background:#eaeaea;color:#777;border-radius:999px;padding:12px 16px;text-align:center;font-weight:600
+    }
+    .step.active{background:var(--brand);color:#fff}
+    .step.done{background:#4b5563;color:#fff}
+
+    /* progress bar */
+    .progress{height:10px;background:#eee;border-radius:999px;overflow:hidden;margin:8px 0 24px}
+    .progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981);transition:width .35s ease}
+
+    /* card */
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin:14px 0}
+    .grid{display:grid;gap:12px}
+    .g2{grid-template-columns:1fr 1fr}
+    @media (max-width:700px){.g2{grid-template-columns:1fr}}
+
+    label{font-size:.92rem;font-weight:600;display:block;margin:4px 2px}
+    .req{font-size:.72rem;background:#fde68a;color:#92400e;border-radius:6px;padding:2px 6px;margin-right:6px}
+    input,select,textarea{width:100%;box-sizing:border-box;padding:12px 14px;border:1.4px solid #d4d4d8;border-radius:10px;font:inherit;outline:none;transition:.2s}
+    input:focus,select:focus,textarea:focus{border-color:var(--ok);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+
+    /* nav buttons */
+    .nav{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:10px}
+    .btn{appearance:none;border:0;border-radius:999px;padding:12px 20px;font-weight:700;cursor:pointer}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+    .btn-primary{background:var(--brand);color:#fff}
+    .btn-ghost{background:#f4f4f5;color:#111}
+
+    .muted{color:var(--ink-weak);font-size:.9rem}
+    .hidden{display:none}
+    .right{display:flex;justify-content:flex-end}
+    .sum{font-size:1.2rem;font-weight:800}
+    .hr{height:1px;background:#eee;margin:8px 0}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">Takara Style</div>
+      <div class="muted">サンプル / ステップ式フォーム</div>
+    </header>
+
+    <div class="stepper" id="stepper">
+      <div class="step active" data-step="0">1 入力</div>
+      <div class="step" data-step="1">2 送付先</div>
+      <div class="step" data-step="2">3 商品</div>
+      <div class="step" data-step="3">4 確認</div>
+    </div>
+
+    <div class="progress"><i id="bar"></i></div>
+
+    <!-- step 1: 注文者情報 -->
+    <section class="card step-pane" data-step="0">
+      <h2>注文者情報</h2>
+      <div class="grid g2">
+        <div>
+          <label><span class="req">必須</span>姓</label>
+          <input id="name-sei" required />
+        </div>
+        <div>
+          <label><span class="req">必須</span>名</label>
+          <input id="name-mei" required />
+        </div>
+        <div>
+          <label><span class="req">必須</span>電話番号（ハイフン無）</label>
+          <input id="tel" inputmode="numeric" pattern="[0-9]{10,11}" placeholder="09012345678" required />
+        </div>
+        <div>
+          <label><span class="req">必須</span>メールアドレス</label>
+          <input id="email" type="email" required />
+        </div>
+        <div>
+          <label><span class="req">必須</span>郵便番号（7桁）</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="postal-code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" required />
+            <button type="button" class="btn btn-ghost" id="address-search">住所検索</button>
+          </div>
+        </div>
+        <div>
+          <label><span class="req">必須</span>都道府県</label>
+          <input id="prefecture" required />
+        </div>
+        <div>
+          <label><span class="req">必須</span>市区町村</label>
+          <input id="city" required />
+        </div>
+        <div>
+          <label><span class="req">必須</span>住所３（番地）</label>
+          <input id="address-details" required />
+        </div>
+        <div>
+          <label>住所４（建物名・部屋番号）</label>
+          <input id="address-extra" placeholder="マンション名・部屋番号" />
+        </div>
+      </div>
+      <div class="nav right">
+        <button type="button" class="btn btn-primary" id="next-0">次へ →</button>
+      </div>
+    </section>
+
+    <!-- step 2: 送付先 -->
+    <section class="card step-pane hidden" data-step="1">
+      <h2>送付先</h2>
+      <div class="grid g2">
+        <div>
+          <label><span class="req">必須</span>送り先 姓</label>
+          <input id="d-sei" required />
+        </div>
+        <div>
+          <label><span class="req">必須</span>送り先 名</label>
+          <input id="d-mei" required />
+        </div>
+        <div>
+          <label>送り先 電話（任意）</label>
+          <input id="d-tel" inputmode="numeric" pattern="[0-9]{10,11}" placeholder="09012345678" />
+        </div>
+        <div class="right">
+          <button type="button" class="btn btn-ghost" id="copy-buyer">注文者と同じ</button>
+        </div>
+        <div>
+          <label><span class="req">必須</span>送り先 郵便番号（7桁）</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="d-postal-code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" />
+            <button type="button" class="btn btn-ghost" onclick="getAddress('d-postal-code','d-prefecture','d-city','d-address-details')">住所検索</button>
+          </div>
+        </div>
+        <div>
+          <label><span class="req">必須</span>送り先 都道府県</label>
+          <input id="d-prefecture" />
+        </div>
+        <div>
+          <label><span class="req">必須</span>送り先 市区町村</label>
+          <input id="d-city" />
+        </div>
+        <div>
+          <label><span class="req">必須</span>送り先 住所３（番地）</label>
+          <input id="d-address-details" />
+        </div>
+        <div>
+          <label>送り先 住所４（建物名・部屋番号）</label>
+          <input id="d-address-extra" placeholder="マンション名・部屋番号" />
+        </div>
+      </div>
+      <div class="nav">
+        <button type="button" class="btn btn-ghost" id="back-1">← 戻る</button>
+        <button type="button" class="btn btn-primary" id="next-1">次へ →</button>
+      </div>
+    </section>
+
+    <!-- step 3: 商品 -->
+    <section class="card step-pane hidden" data-step="2">
+      <h2>商品</h2>
+      <div class="grid g2">
+        <div>
+          <label><span class="req">必須</span>品種</label>
+          <select id="itmnm" required>
+            <option value="">--</option>
+            <option>青島</option>
+            <option>興津</option>
+            <option>羽衣</option>
+          </select>
+        </div>
+        <div>
+          <label><span class="req">必須</span>等級1</label>
+          <select id="rank1" required>
+            <option value="">--</option>
+            <option>普通</option>
+            <option>マルチ</option>
+          </select>
+        </div>
+        <div>
+          <label><span class="req">必須</span>等級2</label>
+          <select id="rank2" required>
+            <option value="">--</option>
+            <option>A</option>
+            <option>B</option>
+          </select>
+        </div>
+        <div>
+          <label>サイズ</label>
+          <select id="size">
+            <option value="">--</option>
+            <option>2S</option>
+            <option>S</option>
+            <option>M</option>
+            <option>L</option>
+          </select>
+        </div>
+        <div>
+          <label><span class="req">必須</span>重量</label>
+          <select id="weight" required>
+            <option value="">--</option>
+            <option>5kg</option>
+            <option>10kg</option>
+            <option>15kg</option>
+          </select>
+        </div>
+        <div>
+          <label><span class="req">必須</span>箱数</label>
+          <select id="box" required>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        </div>
+      </div>
+      <div class="hr"></div>
+      <div class="right">
+        <div class="sum">合計: <span id="total">¥0</span></div>
+      </div>
+      <div class="nav">
+        <button type="button" class="btn btn-ghost" id="back-2">← 戻る</button>
+        <button type="button" class="btn btn-primary" id="next-2">次へ →</button>
+      </div>
+    </section>
+
+    <!-- step 4: 確認 -->
+    <section class="card step-pane hidden" data-step="3">
+      <h2>確認</h2>
+      <p class="muted">入力内容を確認して送信してください。</p>
+      <div id="confirm" class="grid"></div>
+      <div class="nav">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" class="btn btn-ghost" id="back-3">← 戻る</button>
+          <span class="muted" id="recipient-count"></span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn" id="add-more">＋ 送り先を追加</button>
+          <button type="button" class="btn btn-primary" id="final-check">最終確認</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // --- ステップ制御 ---
+    const panes = [...document.querySelectorAll('.step-pane')];
+    const steps = [...document.querySelectorAll('.stepper .step')];
+    const bar = document.getElementById('bar');
+    let step = 0;
+
+    // --- 複数送り先用の状態 ---
+    const MAX_RECIPIENTS = 20;
+    let recipientIndex = 1;        // 何件目の送り先か（1始まり）
+    const orders = [];             // {buyer:{...}, recipient:{...}, product:{...}}
+
+    function updateRecipientStepLabel(){
+      const label = recipientIndex > 1 ? `2 送付先 ${recipientIndex}` : `2 送付先`;
+      const s = steps.find(el => el.dataset.step === '1');
+      if (s) s.textContent = label;
+      const cnt = document.getElementById('recipient-count');
+      if (cnt) cnt.textContent = orders.length ? `現在 ${orders.length} 件登録済み` : '';
+      // 追加ボタンの有効/無効
+      const addBtn = document.getElementById('add-more');
+      if (addBtn) addBtn.disabled = (orders.length >= MAX_RECIPIENTS);
+    }
+
+    function clearRecipientAndProduct(){
+      // recipient
+      ['d-sei','d-mei','d-tel','d-postal-code','d-prefecture','d-city','d-address-details','d-address-extra']
+        .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
+      // product
+      ['itmnm','rank1','rank2','size','weight','box']
+        .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
+      document.getElementById('box').value = '1';
+      recalc();
+    }
+
+    function collectBuyer(){
+      return {
+        sei: document.getElementById('name-sei').value,
+        mei: document.getElementById('name-mei').value,
+        tel: document.getElementById('tel').value,
+        email: document.getElementById('email').value,
+        zip: document.getElementById('postal-code').value,
+        pref: document.getElementById('prefecture').value,
+        city: document.getElementById('city').value,
+        addr3: document.getElementById('address-details').value,
+        addr4: document.getElementById('address-extra').value
+      };
+    }
+
+    function collectRecipient(){
+      return {
+        sei: document.getElementById('d-sei').value,
+        mei: document.getElementById('d-mei').value,
+        tel: document.getElementById('d-tel').value,
+        zip: document.getElementById('d-postal-code').value,
+        pref: document.getElementById('d-prefecture').value,
+        city: document.getElementById('d-city').value,
+        addr3: document.getElementById('d-address-details').value,
+        addr4: document.getElementById('d-address-extra').value
+      };
+    }
+
+    function collectProduct(){
+      return {
+        itmnm: document.getElementById('itmnm').value,
+        rank1: document.getElementById('rank1').value,
+        rank2: document.getElementById('rank2').value,
+        size: document.getElementById('size').value,
+        weight: document.getElementById('weight').value,
+        box: document.getElementById('box').value,
+        total: document.getElementById('total').textContent
+      };
+    }
+
+    function setStep(to){
+      step = Math.max(0, Math.min(panes.length-1, to));
+      panes.forEach((p,i)=>p.classList.toggle('hidden', i!==step));
+      steps.forEach((s,i)=>{
+        s.classList.toggle('active', i===step);
+        s.classList.toggle('done', i<step);
+      });
+      bar.style.width = (step/(panes.length-1))*100 + '%';
+    }
+    setStep(0);
+    updateRecipientStepLabel();
+
+    // 必須チェック（ざっくり）
+    function checkStep0(){
+      const ids = ['name-sei','name-mei','tel','email','postal-code','prefecture','city','address-details'];
+      return ids.every(id => document.getElementById(id).value.trim() !== '');
+    }
+    function checkStep1(){ // recipient
+      const ids = ['d-sei','d-mei','d-postal-code','d-prefecture','d-city','d-address-details'];
+      return ids.every(id => document.getElementById(id).value.trim() !== '');
+    }
+    function checkStep2(){ // product
+      const ids = ['itmnm','rank1','rank2','weight','box'];
+      if(!ids.every(id => document.getElementById(id).value.trim() !== '')) return false;
+      if(document.getElementById('rank2').value !== 'B' && document.getElementById('size').value === '') return false;
+      return true;
+    }
+
+    // 次へ／戻る
+    document.getElementById('next-0').onclick = ()=>{
+      if(!checkStep0()) { alert('必須項目を入力してください'); return; }
+      setStep(1);
+    };
+    document.getElementById('back-1').onclick = ()=> setStep(0);
+    document.getElementById('next-1').onclick = ()=>{
+      if(!checkStep1()) { alert('送付先の必須を入力してください'); return; }
+      setStep(2);
+    };
+    document.getElementById('back-2').onclick = ()=> setStep(1);
+    document.getElementById('next-2').onclick = ()=>{
+      if(!checkStep2()) { alert('商品の必須を入力してください'); return; }
+      const c = document.getElementById('confirm');
+      c.innerHTML = '';
+
+      const buyer = collectBuyer();
+      const recip = collectRecipient();
+      const prod  = collectProduct();
+
+      const rows = [
+        ['氏名', `${buyer.sei} ${buyer.mei}`],
+        ['電話', buyer.tel],
+        ['メール', buyer.email],
+        ['住所', `${buyer.pref}${buyer.city}${buyer.addr3}${(buyer.addr4? ' ' + buyer.addr4 : '')}`],
+        ['送り先氏名', `${recip.sei} ${recip.mei}`],
+        ['送り先電話', `${recip.tel || '-'}`],
+        ['送り先住所', `${recip.pref}${recip.city}${recip.addr3}${(recip.addr4? ' ' + recip.addr4 : '')}`],
+        ['商品', `${prod.itmnm} ${prod.rank1}${prod.rank2} ${prod.size || '-'} ${prod.weight}`],
+        ['箱数', prod.box],
+        ['合計', prod.total]
+      ];
+      rows.forEach(([k,v])=>{
+        const div=document.createElement('div');
+        div.className='card';div.innerHTML=`<strong>${k}</strong><div class="muted">${v}</div>`;c.appendChild(div);
+      });
+      setStep(3);
+      updateRecipientStepLabel();
+    };
+
+    // B等級はサイズ無効
+    document.getElementById('rank2').addEventListener('change', (e)=>{
+      const size = document.getElementById('size');
+      if(e.target.value==='B'){ size.value=''; size.disabled=true; }
+      else{ size.disabled=false; }
+    });
+
+    // 簡易 金額計算（叩き台）
+    const priceMap = { '5kg': 3500, '10kg': 7000, '15kg': 10500 };
+    function recalc(){
+      const w = document.getElementById('weight').value;
+      const n = parseInt(document.getElementById('box').value||'0',10);
+      const total = (priceMap[w]||0)*n;
+      document.getElementById('total').textContent = total.toLocaleString('ja-JP',{style:'currency',currency:'JPY',minimumFractionDigits:0});
+    }
+    ['weight','box'].forEach(id=>document.getElementById(id).addEventListener('change', recalc));
+    recalc();
+
+    // 確認→戻る
+    document.getElementById('back-3').onclick = ()=> setStep(2);
+
+    // 送り先を追加
+    document.getElementById('add-more').addEventListener('click', ()=>{
+      if (orders.length >= MAX_RECIPIENTS) { alert('追加できるのは最大20件までです'); return; }
+
+      // 現在の内容を保存
+      const buyer = collectBuyer();
+      const recip = collectRecipient();
+      const prod  = collectProduct();
+      orders.push({buyer, recipient: recip, product: prod});
+
+      recipientIndex = orders.length + 1;
+      clearRecipientAndProduct();
+      updateRecipientStepLabel();
+      setStep(1);
+    });
+
+    // 最終確認（ダミー遷移）
+    document.getElementById('final-check').onclick = ()=>{
+      // 未保存の最後の1件を orders に追加
+      const last = {buyer: collectBuyer(), recipient: collectRecipient(), product: collectProduct()};
+      if (!orders.length || JSON.stringify(orders[orders.length-1]) !== JSON.stringify(last)) {
+        orders.push(last);
+      }
+      console.log('最終確認に進むデータ', orders);
+      alert('最終確認ページへ移動（デモ）。ここで本番は最終チェック画面へ遷移します。');
+      // 例: location.href = 'final-check.html';
+    };
+
+    // 注文者情報を送付先にコピー
+    document.getElementById('copy-buyer').addEventListener('click', ()=>{
+      document.getElementById('d-sei').value = document.getElementById('name-sei').value;
+      document.getElementById('d-mei').value = document.getElementById('name-mei').value;
+      document.getElementById('d-tel').value = document.getElementById('tel').value;
+      document.getElementById('d-postal-code').value = document.getElementById('postal-code').value;
+      document.getElementById('d-prefecture').value = document.getElementById('prefecture').value;
+      document.getElementById('d-city').value = document.getElementById('city').value;
+      document.getElementById('d-address-details').value = document.getElementById('address-details').value;
+      document.getElementById('d-address-extra').value = document.getElementById('address-extra').value;
+    });
+  </script>
+</body>
+</html>
