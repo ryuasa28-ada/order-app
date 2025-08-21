@@ -72,13 +72,11 @@
     <section class="card step-pane" data-step="0">
       <h2>注文者情報</h2>
       <div class="grid g2">
-        <div>
-          <label><span class="req">必須</span>姓</label>
-          <input id="name-sei" required />
-        </div>
-        <div>
-          <label><span class="req">必須</span>名</label>
-          <input id="name-mei" required />
+        <div class="g2" style="grid-column: 1 / -1;">
+          <div style="grid-column: 1 / -1;">
+            <label><span class="req">必須</span>氏名（16字以下）</label>
+            <input id="name" name="name" maxlength="16" required />
+          </div>
         </div>
         <div>
           <label><span class="req">必須</span>電話番号（ハイフン無）</label>
@@ -121,13 +119,9 @@
     <section class="card step-pane hidden" data-step="1">
       <h2>送付先</h2>
       <div class="grid g2">
-        <div>
-          <label><span class="req">必須</span>送り先 姓</label>
-          <input id="d-sei" required />
-        </div>
-        <div>
-          <label><span class="req">必須</span>送り先 名</label>
-          <input id="d-mei" required />
+        <div style="grid-column: 1 / -1;">
+          <label><span class="req">必須</span>送り先 氏名</label>
+          <input id="d-name" required />
         </div>
         <div>
           <label>送り先 電話（任意）</label>
@@ -268,16 +262,13 @@
       if (s) s.textContent = label;
       const cnt = document.getElementById('recipient-count');
       if (cnt) cnt.textContent = orders.length ? `現在 ${orders.length} 件登録済み` : '';
-      // 追加ボタンの有効/無効
       const addBtn = document.getElementById('add-more');
       if (addBtn) addBtn.disabled = (orders.length >= MAX_RECIPIENTS);
     }
 
     function clearRecipientAndProduct(){
-      // recipient
-      ['d-sei','d-mei','d-tel','d-postal-code','d-prefecture','d-city','d-address-details','d-address-extra']
+      ['d-name','d-tel','d-postal-code','d-prefecture','d-city','d-address-details','d-address-extra']
         .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
-      // product
       ['itmnm','rank1','rank2','size','weight','box']
         .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
       document.getElementById('box').value = '1';
@@ -286,28 +277,26 @@
 
     function collectBuyer(){
       return {
-        sei: document.getElementById('name-sei').value,
-        mei: document.getElementById('name-mei').value,
-        tel: document.getElementById('tel').value,
-        email: document.getElementById('email').value,
-        zip: document.getElementById('postal-code').value,
+        name: document.getElementById('name').value,
+        tel:  document.getElementById('tel').value,
+        email:document.getElementById('email').value,
+        zip:  document.getElementById('postal-code').value,
         pref: document.getElementById('prefecture').value,
         city: document.getElementById('city').value,
-        addr3: document.getElementById('address-details').value,
-        addr4: document.getElementById('address-extra').value
+        addr3:document.getElementById('address-details').value,
+        addr4:document.getElementById('address-extra').value
       };
     }
 
     function collectRecipient(){
       return {
-        sei: document.getElementById('d-sei').value,
-        mei: document.getElementById('d-mei').value,
-        tel: document.getElementById('d-tel').value,
-        zip: document.getElementById('d-postal-code').value,
+        name: document.getElementById('d-name').value,
+        tel:  document.getElementById('d-tel').value,
+        zip:  document.getElementById('d-postal-code').value,
         pref: document.getElementById('d-prefecture').value,
         city: document.getElementById('d-city').value,
-        addr3: document.getElementById('d-address-details').value,
-        addr4: document.getElementById('d-address-extra').value
+        addr3:document.getElementById('d-address-details').value,
+        addr4:document.getElementById('d-address-extra').value
       };
     }
 
@@ -316,9 +305,9 @@
         itmnm: document.getElementById('itmnm').value,
         rank1: document.getElementById('rank1').value,
         rank2: document.getElementById('rank2').value,
-        size: document.getElementById('size').value,
-        weight: document.getElementById('weight').value,
-        box: document.getElementById('box').value,
+        size:  document.getElementById('size').value,
+        weight:document.getElementById('weight').value,
+        box:   document.getElementById('box').value,
         total: document.getElementById('total').textContent
       };
     }
@@ -331,27 +320,23 @@
         s.classList.toggle('done', i<step);
       });
       bar.style.width = (step/(panes.length-1))*100 + '%';
-      // ページ遷移時は最上部へスクロール
       try {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch(e) {
-        // 古いブラウザ用フォールバック
-        window.scrollTo(0, 0);
-      }
+      } catch(e) { window.scrollTo(0, 0); }
     }
     setStep(0);
     updateRecipientStepLabel();
 
     // 必須チェック（ざっくり）
     function checkStep0(){
-      const ids = ['name-sei','name-mei','tel','email','postal-code','prefecture','city','address-details'];
+      const ids = ['name','tel','email','postal-code','prefecture','city','address-details'];
       return ids.every(id => document.getElementById(id).value.trim() !== '');
     }
-    function checkStep1(){ // recipient
-      const ids = ['d-sei','d-mei','d-postal-code','d-prefecture','d-city','d-address-details'];
+    function checkStep1(){
+      const ids = ['d-name','d-postal-code','d-prefecture','d-city','d-address-details'];
       return ids.every(id => document.getElementById(id).value.trim() !== '');
     }
-    function checkStep2(){ // product
+    function checkStep2(){
       const ids = ['itmnm','rank1','rank2','weight','box'];
       if(!ids.every(id => document.getElementById(id).value.trim() !== '')) return false;
       if(document.getElementById('rank2').value !== 'B' && document.getElementById('size').value === '') return false;
@@ -379,11 +364,11 @@
       const prod  = collectProduct();
 
       const rows = [
-        ['氏名', `${buyer.sei} ${buyer.mei}`],
+        ['氏名', buyer.name],
         ['電話', buyer.tel],
         ['メール', buyer.email],
         ['住所', `${buyer.pref}${buyer.city}${buyer.addr3}${(buyer.addr4? ' ' + buyer.addr4 : '')}`],
-        ['送り先氏名', `${recip.sei} ${recip.mei}`],
+        ['送り先氏名', recip.name],
         ['送り先電話', `${recip.tel || '-'}`],
         ['送り先住所', `${recip.pref}${recip.city}${recip.addr3}${(recip.addr4? ' ' + recip.addr4 : '')}`],
         ['商品', `${prod.itmnm} ${prod.rank1}${prod.rank2} ${prod.size || '-'} ${prod.weight}`],
@@ -392,7 +377,9 @@
       ];
       rows.forEach(([k,v])=>{
         const div=document.createElement('div');
-        div.className='card';div.innerHTML=`<strong>${k}</strong><div class="muted">${v}</div>`;c.appendChild(div);
+        div.className='card';
+        div.innerHTML=`<strong>${k}</strong><div class="muted">${v}</div>`;
+        c.appendChild(div);
       });
       setStep(3);
       updateRecipientStepLabel();
@@ -405,13 +392,14 @@
       else{ size.disabled=false; }
     });
 
-    // 簡易 金額計算（叩き台）
+    // 簡易 金額計算
     const priceMap = { '5kg': 3500, '10kg': 7000, '15kg': 10500 };
     function recalc(){
       const w = document.getElementById('weight').value;
       const n = parseInt(document.getElementById('box').value||'0',10);
       const total = (priceMap[w]||0)*n;
-      document.getElementById('total').textContent = total.toLocaleString('ja-JP',{style:'currency',currency:'JPY',minimumFractionDigits:0});
+      document.getElementById('total').textContent =
+        total.toLocaleString('ja-JP',{style:'currency',currency:'JPY',minimumFractionDigits:0});
     }
     ['weight','box'].forEach(id=>document.getElementById(id).addEventListener('change', recalc));
     recalc();
@@ -422,13 +410,10 @@
     // 送り先を追加
     document.getElementById('add-more').addEventListener('click', ()=>{
       if (orders.length >= MAX_RECIPIENTS) { alert('追加できるのは最大20件までです'); return; }
-
-      // 現在の内容を保存
       const buyer = collectBuyer();
       const recip = collectRecipient();
       const prod  = collectProduct();
       orders.push({buyer, recipient: recip, product: prod});
-
       recipientIndex = orders.length + 1;
       clearRecipientAndProduct();
       updateRecipientStepLabel();
@@ -437,20 +422,17 @@
 
     // 最終確認（ダミー遷移）
     document.getElementById('final-check').onclick = ()=>{
-      // 未保存の最後の1件を orders に追加
       const last = {buyer: collectBuyer(), recipient: collectRecipient(), product: collectProduct()};
       if (!orders.length || JSON.stringify(orders[orders.length-1]) !== JSON.stringify(last)) {
         orders.push(last);
       }
       console.log('最終確認に進むデータ', orders);
-      alert('最終確認ページへ移動（デモ）。ここで本番は最終チェック画面へ遷移します。');
-      // 例: location.href = 'final-check.html';
+      alert('最終確認ページへ移動（デモ）。');
     };
 
     // 注文者情報を送付先にコピー
     document.getElementById('copy-buyer').addEventListener('click', ()=>{
-      document.getElementById('d-sei').value = document.getElementById('name-sei').value;
-      document.getElementById('d-mei').value = document.getElementById('name-mei').value;
+      document.getElementById('d-name').value = document.getElementById('name').value;
       document.getElementById('d-tel').value = document.getElementById('tel').value;
       document.getElementById('d-postal-code').value = document.getElementById('postal-code').value;
       document.getElementById('d-prefecture').value = document.getElementById('prefecture').value;
