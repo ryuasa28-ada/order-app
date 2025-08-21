@@ -331,6 +331,13 @@
         s.classList.toggle('done', i<step);
       });
       bar.style.width = (step/(panes.length-1))*100 + '%';
+      // ページ遷移時は最上部へスクロール
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch(e) {
+        // 古いブラウザ用フォールバック
+        window.scrollTo(0, 0);
+      }
     }
     setStep(0);
     updateRecipientStepLabel();
