@@ -80,34 +80,38 @@
         </div>
         <div>
           <label><span class="req">必須</span>電話番号（ハイフン無）</label>
-          <input id="tel" inputmode="numeric" pattern="[0-9]{10,11}" placeholder="09012345678" required />
+          <input id="phone-number" name="phone_number" inputmode="numeric" pattern="[0-9]{10,11}" placeholder="09012345678" required />
         </div>
         <div>
           <label><span class="req">必須</span>メールアドレス</label>
-          <input id="email" type="email" required />
+          <input id="email" name="email" type="email" required />
         </div>
         <div>
           <label><span class="req">必須</span>郵便番号（7桁）</label>
           <div style="display:flex; gap:8px; align-items:center;">
-            <input id="postal-code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" required />
+              <input id="postal-code" name="postal_code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" required />
             <button type="button" class="btn btn-ghost" id="address-search">住所検索</button>
           </div>
         </div>
         <div>
           <label><span class="req">必須</span>都道府県</label>
-          <input id="prefecture" required />
+          <input id="prefecture" name="prefecture" required />
         </div>
         <div>
           <label><span class="req">必須</span>市区町村</label>
-          <input id="city" required />
+          <input id="city" name="city" required />
         </div>
         <div>
           <label><span class="req">必須</span>住所３（番地）</label>
-          <input id="address-details" required />
+          <input id="address-details" name="address_details" required />
         </div>
         <div>
           <label>住所４（建物名・部屋番号）</label>
-          <input id="address-extra" placeholder="マンション名・部屋番号" />
+          <input id="building" name="building" placeholder="マンション名・部屋番号" />
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <label>備考</label>
+          <textarea id="remarks" name="remarks" placeholder="ご要望など" rows="3"></textarea>
         </div>
       </div>
       <div class="nav right">
@@ -121,11 +125,11 @@
       <div class="grid g2">
         <div style="grid-column: 1 / -1;">
           <label><span class="req">必須</span>送り先 氏名</label>
-          <input id="d-name" required />
+          <input id="modal-destination-name" required />
         </div>
         <div>
           <label>送り先 電話（任意）</label>
-          <input id="d-tel" inputmode="numeric" pattern="[0-9]{10,11}" placeholder="09012345678" />
+          <input id="modal-destination-phone-number" inputmode="numeric" pattern="[0-9]{10,11}" placeholder="09012345678" />
         </div>
         <div class="right">
           <button type="button" class="btn btn-ghost" id="copy-buyer">注文者と同じ</button>
@@ -133,25 +137,25 @@
         <div>
           <label><span class="req">必須</span>送り先 郵便番号（7桁）</label>
           <div style="display:flex; gap:8px; align-items:center;">
-            <input id="d-postal-code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" />
-            <button type="button" class="btn btn-ghost" onclick="getAddress('d-postal-code','d-prefecture','d-city','d-address-details')">住所検索</button>
+            <input id="modal-destination-postal-code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" />
+            <button type="button" class="btn btn-ghost" onclick="getAddress('modal-destination-postal-code','modal-destination-prefecture','modal-destination-city','modal-destination-address-details')">住所検索</button>
           </div>
         </div>
         <div>
           <label><span class="req">必須</span>送り先 都道府県</label>
-          <input id="d-prefecture" />
+          <input id="modal-destination-prefecture" />
         </div>
         <div>
           <label><span class="req">必須</span>送り先 市区町村</label>
-          <input id="d-city" />
+          <input id="modal-destination-city" />
         </div>
         <div>
           <label><span class="req">必須</span>送り先 住所３（番地）</label>
-          <input id="d-address-details" />
+          <input id="modal-destination-address-details" />
         </div>
         <div>
           <label>送り先 住所４（建物名・部屋番号）</label>
-          <input id="d-address-extra" placeholder="マンション名・部屋番号" />
+          <input id="modal-destination-building" placeholder="マンション名・部屋番号" />
         </div>
       </div>
       <div class="nav">
@@ -166,7 +170,7 @@
       <div class="grid g2">
         <div>
           <label><span class="req">必須</span>品種</label>
-          <select id="itmnm" required>
+          <select id="modal-product-name" required>
             <option value="">--</option>
             <option>青島</option>
             <option>興津</option>
@@ -175,7 +179,7 @@
         </div>
         <div>
           <label><span class="req">必須</span>等級1</label>
-          <select id="rank1" required>
+          <select id="modal-grade1" required>
             <option value="">--</option>
             <option>普通</option>
             <option>マルチ</option>
@@ -183,7 +187,7 @@
         </div>
         <div>
           <label><span class="req">必須</span>等級2</label>
-          <select id="rank2" required>
+          <select id="modal-grade" required>
             <option value="">--</option>
             <option>A</option>
             <option>B</option>
@@ -191,7 +195,7 @@
         </div>
         <div>
           <label>サイズ</label>
-          <select id="size">
+          <select id="modal-size">
             <option value="">--</option>
             <option>2S</option>
             <option>S</option>
@@ -201,7 +205,7 @@
         </div>
         <div>
           <label><span class="req">必須</span>重量</label>
-          <select id="weight" required>
+          <select id="modal-weight" required>
             <option value="">--</option>
             <option>5kg</option>
             <option>10kg</option>
@@ -210,7 +214,7 @@
         </div>
         <div>
           <label><span class="req">必須</span>箱数</label>
-          <select id="box" required>
+          <select id="modal-box-count" required>
             <option value="1">1</option>
             <option value="2">2</option>
           </select>
@@ -219,6 +223,7 @@
       <div class="hr"></div>
       <div class="right">
         <div class="sum">合計: <span id="total">¥0</span></div>
+        <input type="hidden" id="modal-estimated-cost" name="modal_estimated_cost" />
       </div>
       <div class="nav">
         <button type="button" class="btn btn-ghost" id="back-2">← 戻る</button>
@@ -267,47 +272,48 @@
     }
 
     function clearRecipientAndProduct(){
-      ['d-name','d-tel','d-postal-code','d-prefecture','d-city','d-address-details','d-address-extra']
+      ['modal-destination-name','modal-destination-phone-number','modal-destination-postal-code','modal-destination-prefecture','modal-destination-city','modal-destination-address-details','modal-destination-building']
         .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
-      ['itmnm','rank1','rank2','size','weight','box']
+  ['modal-product-name','modal-grade1','modal-grade','modal-size','modal-weight','modal-box-count']
         .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
-      document.getElementById('box').value = '1';
+  document.getElementById('modal-box-count').value = '1';
       recalc();
     }
 
     function collectBuyer(){
       return {
         name: document.getElementById('name').value,
-        tel:  document.getElementById('tel').value,
-        email:document.getElementById('email').value,
-        zip:  document.getElementById('postal-code').value,
-        pref: document.getElementById('prefecture').value,
+        phone_number: document.getElementById('phone-number').value,
+        email: document.getElementById('email').value,
+        postal_code: document.getElementById('postal-code').value,
+        prefecture: document.getElementById('prefecture').value,
         city: document.getElementById('city').value,
-        addr3:document.getElementById('address-details').value,
-        addr4:document.getElementById('address-extra').value
+        address_details: document.getElementById('address-details').value,
+        building: document.getElementById('building').value,
+        remarks: document.getElementById('remarks') ? document.getElementById('remarks').value : ''
       };
     }
 
     function collectRecipient(){
       return {
-        name: document.getElementById('d-name').value,
-        tel:  document.getElementById('d-tel').value,
-        zip:  document.getElementById('d-postal-code').value,
-        pref: document.getElementById('d-prefecture').value,
-        city: document.getElementById('d-city').value,
-        addr3:document.getElementById('d-address-details').value,
-        addr4:document.getElementById('d-address-extra').value
+        name: document.getElementById('modal-destination-name').value,
+        tel:  document.getElementById('modal-destination-phone-number').value,
+        zip:  document.getElementById('modal-destination-postal-code').value,
+        pref: document.getElementById('modal-destination-prefecture').value,
+        city: document.getElementById('modal-destination-city').value,
+        addr3:document.getElementById('modal-destination-address-details').value,
+        addr4:document.getElementById('modal-destination-building').value
       };
     }
 
     function collectProduct(){
       return {
-        itmnm: document.getElementById('itmnm').value,
-        rank1: document.getElementById('rank1').value,
-        rank2: document.getElementById('rank2').value,
-        size:  document.getElementById('size').value,
-        weight:document.getElementById('weight').value,
-        box:   document.getElementById('box').value,
+        modal_product_name: document.getElementById('modal-product-name').value,
+        modal_grade1: document.getElementById('modal-grade1').value,
+        modal_grade: document.getElementById('modal-grade').value,
+        modal_size:  document.getElementById('modal-size').value,
+        modal_weight:document.getElementById('modal-weight').value,
+        modal_box_count:   document.getElementById('modal-box-count').value,
         total: document.getElementById('total').textContent
       };
     }
@@ -329,17 +335,17 @@
 
     // 必須チェック（ざっくり）
     function checkStep0(){
-      const ids = ['name','tel','email','postal-code','prefecture','city','address-details'];
+      const ids = ['name','phone-number','email','postal-code','prefecture','city','address-details'];
       return ids.every(id => document.getElementById(id).value.trim() !== '');
     }
     function checkStep1(){
-      const ids = ['d-name','d-postal-code','d-prefecture','d-city','d-address-details'];
+      const ids = ['modal-destination-name','modal-destination-postal-code','modal-destination-prefecture','modal-destination-city','modal-destination-address-details'];
       return ids.every(id => document.getElementById(id).value.trim() !== '');
     }
     function checkStep2(){
-      const ids = ['itmnm','rank1','rank2','weight','box'];
+      const ids = ['modal-product-name','modal-grade1','modal-grade','modal-weight','modal-box-count'];
       if(!ids.every(id => document.getElementById(id).value.trim() !== '')) return false;
-      if(document.getElementById('rank2').value !== 'B' && document.getElementById('size').value === '') return false;
+      if(document.getElementById('modal-grade').value !== 'B' && document.getElementById('modal-size').value === '') return false;
       return true;
     }
 
@@ -362,12 +368,11 @@
       const buyer = collectBuyer();
       const recip = collectRecipient();
       const prod  = collectProduct();
-
       const rows = [
         ['氏名', buyer.name],
-        ['電話', buyer.tel],
+        ['電話', buyer.phone_number],
         ['メール', buyer.email],
-        ['住所', `${buyer.pref}${buyer.city}${buyer.addr3}${(buyer.addr4? ' ' + buyer.addr4 : '')}`],
+        ['住所', `${buyer.prefecture}${buyer.city}${buyer.address_details}${(buyer.building? ' ' + buyer.building : '')}`],
         ['送り先氏名', recip.name],
         ['送り先電話', `${recip.tel || '-'}`],
         ['送り先住所', `${recip.pref}${recip.city}${recip.addr3}${(recip.addr4? ' ' + recip.addr4 : '')}`],
@@ -375,6 +380,9 @@
         ['箱数', prod.box],
         ['合計', prod.total]
       ];
+      if (buyer.remarks && buyer.remarks.trim() !== ''){
+        rows.splice(4,0,['備考', buyer.remarks]);
+      }
       rows.forEach(([k,v])=>{
         const div=document.createElement('div');
         div.className='card';
@@ -386,8 +394,8 @@
     };
 
     // B等級はサイズ無効
-    document.getElementById('rank2').addEventListener('change', (e)=>{
-      const size = document.getElementById('size');
+    document.getElementById('modal-grade').addEventListener('change', (e)=>{
+      const size = document.getElementById('modal-size');
       if(e.target.value==='B'){ size.value=''; size.disabled=true; }
       else{ size.disabled=false; }
     });
@@ -395,13 +403,16 @@
     // 簡易 金額計算
     const priceMap = { '5kg': 3500, '10kg': 7000, '15kg': 10500 };
     function recalc(){
-      const w = document.getElementById('weight').value;
-      const n = parseInt(document.getElementById('box').value||'0',10);
+      const w = document.getElementById('modal-weight').value;
+      const n = parseInt(document.getElementById('modal-box-count').value||'0',10);
       const total = (priceMap[w]||0)*n;
       document.getElementById('total').textContent =
         total.toLocaleString('ja-JP',{style:'currency',currency:'JPY',minimumFractionDigits:0});
+      // hidden input: numeric value without comma
+      const hidden = document.getElementById('modal-estimated-cost');
+      if(hidden) hidden.value = String(total);
     }
-    ['weight','box'].forEach(id=>document.getElementById(id).addEventListener('change', recalc));
+    ['modal-weight','modal-box-count'].forEach(id=>document.getElementById(id).addEventListener('change', recalc));
     recalc();
 
     // 確認→戻る
@@ -432,13 +443,13 @@
 
     // 注文者情報を送付先にコピー
     document.getElementById('copy-buyer').addEventListener('click', ()=>{
-      document.getElementById('d-name').value = document.getElementById('name').value;
-      document.getElementById('d-tel').value = document.getElementById('tel').value;
-      document.getElementById('d-postal-code').value = document.getElementById('postal-code').value;
-      document.getElementById('d-prefecture').value = document.getElementById('prefecture').value;
-      document.getElementById('d-city').value = document.getElementById('city').value;
-      document.getElementById('d-address-details').value = document.getElementById('address-details').value;
-      document.getElementById('d-address-extra').value = document.getElementById('address-extra').value;
+      document.getElementById('modal-destination-name').value = document.getElementById('name').value;
+      document.getElementById('modal-destination-phone-number').value = document.getElementById('phone-number').value;
+      document.getElementById('modal-destination-postal-code').value = document.getElementById('postal-code').value;
+      document.getElementById('modal-destination-prefecture').value = document.getElementById('prefecture').value;
+      document.getElementById('modal-destination-city').value = document.getElementById('city').value;
+      document.getElementById('modal-destination-address-details').value = document.getElementById('address-details').value;
+      document.getElementById('modal-destination-building').value = document.getElementById('building').value;
     });
   </script>
 </body>
