@@ -71,6 +71,10 @@
     <!-- step 1: 注文者情報 -->
     <section class="card step-pane" data-step="0">
       <h2>注文者情報</h2>
+      <div class="right" style="margin-top:-8px;">
+        <!-- DEMO: 注文者データ自動入力 -->
+        <button type="button" class="btn btn-ghost" id="demo-buyer-fill">デモ入力（注文者）</button>
+      </div>
       <div class="grid g2">
         <div class="g2" style="grid-column: 1 / -1;">
           <div style="grid-column: 1 / -1;">
@@ -122,6 +126,10 @@
     <!-- step 2: 送付先 -->
     <section class="card step-pane hidden" data-step="1">
       <h2>送付先</h2>
+      <div class="right" style="margin-top:-8px;">
+        <!-- DEMO: 送付先データ自動入力 -->
+        <button type="button" class="btn btn-ghost" id="demo-recipient-fill">デモ入力（送付先）</button>
+      </div>
       <div class="grid g2">
         <div style="grid-column: 1 / -1;">
           <label><span class="req">必須</span>送り先 氏名</label>
@@ -451,6 +459,39 @@
       document.getElementById('modal-destination-address-details').value = document.getElementById('address-details').value;
       document.getElementById('modal-destination-building').value = document.getElementById('building').value;
     });
+    // ===== DEMO AUTO-FILL (UI only, will be removed/merged when PHP is integrated) =====
+    function demoFillBuyer() {
+      // 注文者：入力チェックしやすい妥当なダミー値
+      document.getElementById('name').value = '安達 隆之介';
+      document.getElementById('phone-number').value = '09042177478';
+      document.getElementById('email').value = 'demo@example.com';
+      document.getElementById('postal-code').value = '4328038';
+      document.getElementById('prefecture').value = '静岡県';
+      document.getElementById('city').value = '浜松市中央区';
+      document.getElementById('address-details').value = '紅狐町中川15388-16';
+      document.getElementById('building').value = 'VISTAGE 82-36';
+      const rmk = document.getElementById('remarks');
+      if (rmk) rmk.value = 'テスト送信です（このメモは任意）';
+    }
+
+    function demoFillRecipient() {
+      // 送付先：電話は任意なので空でもOK
+      document.getElementById('modal-destination-name').value = '安達 隆之介';
+      document.getElementById('modal-destination-phone-number').value = '09042177478';
+      document.getElementById('modal-destination-postal-code').value = '4328038';
+      document.getElementById('modal-destination-prefecture').value = '静岡県';
+      document.getElementById('modal-destination-city').value = '浜松市中央区';
+      document.getElementById('modal-destination-address-details').value = '紅狐町中川15388-16';
+      document.getElementById('modal-destination-building').value = 'VISTAGE 82-36';
+    }
+
+    // Buttons
+    const btnDemoBuyer = document.getElementById('demo-buyer-fill');
+    if (btnDemoBuyer) btnDemoBuyer.addEventListener('click', demoFillBuyer);
+
+    const btnDemoRecip = document.getElementById('demo-recipient-fill');
+    if (btnDemoRecip) btnDemoRecip.addEventListener('click', demoFillRecipient);
+    // ===== END DEMO AUTO-FILL =====
   </script>
 </body>
 </html>
