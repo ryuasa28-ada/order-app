@@ -61,6 +61,9 @@
     <main class="card">
       <h2>注文者情報</h2>
       <div id="buyerArea" class="kv"></div>
+      <div class="row" id="buyerActions">
+        <button class="btn" id="editBuyer">注文者を編集</button>
+      </div>
 
       <div class="hr"></div>
 
@@ -102,6 +105,28 @@ function calcGrandTotal(){
 
 function el(sel){ return document.querySelector(sel); }
 function div(html){ const d=document.createElement('div'); d.innerHTML=html; return d.firstElementChild; }
+
+// ===== DEMO: index.html へ戻るためのユーティリティ =====
+function goIndex({ startAt = 'recipient', editIndex = null, addNew = false } = {}) {
+  sessionStorage.setItem('buyer', JSON.stringify(buyer));
+  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
+  sessionStorage.setItem('startAt', startAt); // 'buyer' | 'recipient'
+  if (editIndex !== null) {
+    sessionStorage.setItem('editIndex', String(editIndex)); // 編集対象（送り先）index
+  } else {
+    sessionStorage.removeItem('editIndex');
+  }
+  // ハッシュは UI の目印（index.html 側で参照している場合のために残す）
+  if (addNew) {
+    location.href = 'index.html#add';
+  } else if (editIndex !== null) {
+    location.href = 'index.html#edit';
+  } else if (startAt === 'buyer') {
+    location.href = 'index.html#buyer';
+  } else {
+    location.href = 'index.html';
+  }
+}
 
 // ===== DEMO: 描画 =====
 function renderBuyer(){
@@ -161,19 +186,21 @@ function renderAll(){ renderList(); renderDetail(); }
 
 // ===== DEMO: 操作ボタン =====
 el('#addMore').onclick = ()=>{
-  // index.html へ戻って追加登録（編集対象なし）
-  sessionStorage.setItem('buyer', JSON.stringify(buyer));
-  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
-  location.href = 'index.html#add';
+  // 送り先の追加。index.html 側は startAt='recipient' を見て 送付先ステップから開始し、
+  // 既存件数（orders.length）をベースに「n+1件目」として登録させる想定。
+  goIndex({ startAt: 'recipient', addNew: true });
 };
 
 el('#editOnIndex').onclick = ()=>{
   if(!orders[current]) return;
-  // 編集対象の index をセッションに格納して index.html へ
-  sessionStorage.setItem('buyer', JSON.stringify(buyer));
-  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
-  sessionStorage.setItem('editIndex', String(current)); // ← index.html 側で拾ってフォームへ反映する想定
-  location.href = 'index.html#edit';
+  // 送り先の編集。index.html 側は editIndex を見て対象の送り先＆商品をフォームへ復元。
+  // さらに startAt='recipient' で送付先ステップから開始（＝注文者入力は飛ばす）。
+  goIndex({ startAt: 'recipient', editIndex: current });
+};
+
+// 注文者を編集：index.html を 注文者ステップから開始（送り先フォームは触らない）
+el('#editBuyer').onclick = ()=>{
+  goIndex({ startAt: 'buyer' });
 };
 
 el('#delete').onclick = ()=>{
