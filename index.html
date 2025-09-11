@@ -439,15 +439,22 @@
       setStep(1);
     });
 
-    // 最終確認（ダミー遷移）
-    document.getElementById('final-check').onclick = ()=>{
-      const last = {buyer: collectBuyer(), recipient: collectRecipient(), product: collectProduct()};
-      if (!orders.length || JSON.stringify(orders[orders.length-1]) !== JSON.stringify(last)) {
-        orders.push(last);
-      }
-      console.log('最終確認に進むデータ', orders);
-      alert('最終確認ページへ移動（デモ）。');
-    };
+// ===== FINAL CHECK NAVIGATION (DEMO) =====
+document.getElementById('final-check').onclick = () => {
+  // 直近の編集中データを orders に取り込む
+  const last = { buyer: collectBuyer(), recipient: collectRecipient(), product: collectProduct() };
+  if (!orders.length || JSON.stringify(orders[orders.length-1]) !== JSON.stringify(last)) {
+    orders.push(last);
+  }
+
+  // セッションに保存（PHP 化時はここでサーバへPOST想定）
+  sessionStorage.setItem('buyer', JSON.stringify(collectBuyer()));
+  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
+
+  // 最終確認ページへ
+  location.href = 'final-check.html';
+};
+// ===== FINAL CHECK NAVIGATION (DEMO) =====
 
     // 注文者情報を送付先にコピー
     document.getElementById('copy-buyer').addEventListener('click', ()=>{
