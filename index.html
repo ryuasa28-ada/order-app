@@ -376,27 +376,45 @@
       const buyer = collectBuyer();
       const recip = collectRecipient();
       const prod  = collectProduct();
-      const rows = [
-        ['氏名', buyer.name],
-        ['電話', buyer.phone_number],
-        ['メール', buyer.email],
-        ['住所', `${buyer.prefecture}${buyer.city}${buyer.address_details}${(buyer.building? ' ' + buyer.building : '')}`],
-        ['送り先氏名', recip.name],
-        ['送り先電話', `${recip.tel || '-'}`],
-        ['送り先住所', `${recip.pref}${recip.city}${recip.addr3}${(recip.addr4? ' ' + recip.addr4 : '')}`],
-        ['商品', `${prod.itmnm} ${prod.rank1}${prod.rank2} ${prod.size || '-'} ${prod.weight}`],
-        ['箱数', prod.box],
-        ['合計', prod.total]
-      ];
-      if (buyer.remarks && buyer.remarks.trim() !== ''){
-        rows.splice(4,0,['備考', buyer.remarks]);
+
+      // 注文者情報
+      const buyerCard = document.createElement('div');
+      buyerCard.className = 'card';
+      let buyerHtml = '<h3>注文者情報</h3>';
+      buyerHtml += `<div><strong>氏名</strong>: <span class="muted">${buyer.name}</span></div>`;
+      buyerHtml += `<div><strong>電話</strong>: <span class="muted">${buyer.phone_number}</span></div>`;
+      buyerHtml += `<div><strong>メール</strong>: <span class="muted">${buyer.email}</span></div>`;
+      buyerHtml += `<div><strong>住所</strong>: <span class="muted">${buyer.prefecture}${buyer.city}${buyer.address_details}${buyer.building ? ' ' + buyer.building : ''}</span></div>`;
+      if (buyer.remarks && buyer.remarks.trim() !== '') {
+        buyerHtml += `<div><strong>備考</strong>: <span class="muted">${buyer.remarks}</span></div>`;
       }
-      rows.forEach(([k,v])=>{
-        const div=document.createElement('div');
-        div.className='card';
-        div.innerHTML=`<strong>${k}</strong><div class="muted">${v}</div>`;
-        c.appendChild(div);
-      });
+      buyerCard.innerHTML = buyerHtml;
+      c.appendChild(buyerCard);
+
+      // 送り先情報
+      const recipCard = document.createElement('div');
+      recipCard.className = 'card';
+      let recipHtml = '<h3>送り先情報</h3>';
+      recipHtml += `<div><strong>氏名</strong>: <span class="muted">${recip.name}</span></div>`;
+      recipHtml += `<div><strong>電話</strong>: <span class="muted">${recip.tel || '-'}</span></div>`;
+      recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + recip.addr4 : ''}</span></div>`;
+      recipCard.innerHTML = recipHtml;
+      c.appendChild(recipCard);
+
+      // 商品情報
+      const prodCard = document.createElement('div');
+      prodCard.className = 'card';
+      let prodHtml = '<h3>商品情報</h3>';
+      prodHtml += `<div><strong>品種</strong>: <span class="muted">${prod.modal_product_name}</span></div>`;
+      prodHtml += `<div><strong>等級1</strong>: <span class="muted">${prod.modal_grade1}</span></div>`;
+      prodHtml += `<div><strong>等級2</strong>: <span class="muted">${prod.modal_grade}</span></div>`;
+      prodHtml += `<div><strong>サイズ</strong>: <span class="muted">${prod.modal_size || '-'}</span></div>`;
+      prodHtml += `<div><strong>重量</strong>: <span class="muted">${prod.modal_weight}</span></div>`;
+      prodHtml += `<div><strong>箱数</strong>: <span class="muted">${prod.modal_box_count}</span></div>`;
+      prodHtml += `<div><strong>合計</strong>: <span class="muted">${prod.total}</span></div>`;
+      prodCard.innerHTML = prodHtml;
+      c.appendChild(prodCard);
+
       setStep(3);
       updateRecipientStepLabel();
     };
