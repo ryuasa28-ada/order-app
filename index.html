@@ -262,10 +262,13 @@
     const bar = document.getElementById('bar');
     let step = 0;
 
-    // --- 複数送り先用の状態 ---
     const MAX_RECIPIENTS = 20;
-    let recipientIndex = 1;        // 何件目の送り先か（1始まり）
-    const orders = [];             // {buyer:{...}, recipient:{...}, product:{...}}
+    let recipientIndex = 1;
+    const orders = [];
+
+    // ★ 編集モード判定
+    const EDIT_INDEX = sessionStorage.getItem('editIndex');
+    const EDIT_MODE  = EDIT_INDEX !== null;
 
     function updateRecipientStepLabel(){
       const label = recipientIndex > 1 ? `2 送付先 ${recipientIndex}` : `2 送付先`;
@@ -365,60 +368,62 @@
     };
     document.getElementById('back-1').onclick = ()=> setStep(0);
     document.getElementById('next-1').onclick = ()=>{
-      if(!checkStep1()) { alert('送付先の必須を入力してください'); return; }
-      setStep(2);
-    };
-    document.getElementById('back-2').onclick = ()=> setStep(1);
-    document.getElementById('next-2').onclick = ()=>{
-      if(!checkStep2()) { alert('商品の必須を入力してください'); return; }
-      const c = document.getElementById('confirm');
-      c.innerHTML = '';
+  if(!checkStep1()) { alert('送付先の必須を入力してください'); return; }
+  if (EDIT_MODE) { upsertAndGoFinal(); return; }  // ★編集中は直行
+  setStep(2);
+};
 
-      const buyer = collectBuyer();
-      const recip = collectRecipient();
-      const prod  = collectProduct();
+document.getElementById('next-2').onclick = ()=>{
+  if(!checkStep2()) { alert('商品の必須を入力してください'); return; }
+  if (EDIT_MODE) { upsertAndGoFinal(); return; }  // ★編集中は直行
 
-      // 注文者情報
-      const buyerCard = document.createElement('div');
-      buyerCard.className = 'card';
-      let buyerHtml = '<h3>注文者情報</h3>';
-      buyerHtml += `<div><strong>氏名</strong>: <span class="muted">${buyer.name}</span></div>`;
-      buyerHtml += `<div><strong>電話</strong>: <span class="muted">${buyer.phone_number}</span></div>`;
-      buyerHtml += `<div><strong>メール</strong>: <span class="muted">${buyer.email}</span></div>`;
-      buyerHtml += `<div><strong>住所</strong>: <span class="muted">${buyer.prefecture}${buyer.city}${buyer.address_details}${buyer.building ? ' ' + buyer.building : ''}</span></div>`;
-      if (buyer.remarks && buyer.remarks.trim() !== '') {
-        buyerHtml += `<div><strong>備考</strong>: <span class="muted">${buyer.remarks}</span></div>`;
-      }
-      buyerCard.innerHTML = buyerHtml;
-      c.appendChild(buyerCard);
+  // （通常モードのみ：プレビュー用の確認カード生成）
+  const c = document.getElementById('confirm');
+  c.innerHTML = '';
 
-      // 送り先情報
-      const recipCard = document.createElement('div');
-      recipCard.className = 'card';
-      let recipHtml = '<h3>送り先情報</h3>';
-      recipHtml += `<div><strong>氏名</strong>: <span class="muted">${recip.name}</span></div>`;
-      recipHtml += `<div><strong>電話</strong>: <span class="muted">${recip.tel || '-'}</span></div>`;
-      recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + recip.addr4 : ''}</span></div>`;
-      recipCard.innerHTML = recipHtml;
-      c.appendChild(recipCard);
+  const buyer = collectBuyer();
+  const recip = collectRecipient();
+  const prod  = collectProduct();
 
-      // 商品情報
-      const prodCard = document.createElement('div');
-      prodCard.className = 'card';
-      let prodHtml = '<h3>商品情報</h3>';
-      prodHtml += `<div><strong>品種</strong>: <span class="muted">${prod.modal_product_name}</span></div>`;
-      prodHtml += `<div><strong>等級1</strong>: <span class="muted">${prod.modal_grade1}</span></div>`;
-      prodHtml += `<div><strong>等級2</strong>: <span class="muted">${prod.modal_grade}</span></div>`;
-      prodHtml += `<div><strong>サイズ</strong>: <span class="muted">${prod.modal_size || '-'}</span></div>`;
-      prodHtml += `<div><strong>重量</strong>: <span class="muted">${prod.modal_weight}</span></div>`;
-      prodHtml += `<div><strong>箱数</strong>: <span class="muted">${prod.modal_box_count}</span></div>`;
-      prodHtml += `<div><strong>合計</strong>: <span class="muted">${prod.total}</span></div>`;
-      prodCard.innerHTML = prodHtml;
-      c.appendChild(prodCard);
+  const buyerCard = document.createElement('div');
+  buyerCard.className = 'card';
+  let buyerHtml = '<h3>注文者情報</h3>';
+  buyerHtml += `<div><strong>氏名</strong>: <span class="muted">${buyer.name}</span></div>`;
+  buyerHtml += `<div><strong>電話</strong>: <span class="muted">${buyer.phone_number}</span></div>`;
+  buyerHtml += `<div><strong>メール</strong>: <span class="muted">${buyer.email}</span></div>`;
+  buyerHtml += `<div><strong>住所</strong>: <span class="muted">${buyer.prefecture}${buyer.city}${buyer.address_details}${buyer.building ? ' ' + buyer.building : ''}</span></div>`;
+  if (buyer.remarks && buyer.remarks.trim() !== '') {
+    buyerHtml += `<div><strong>備考</strong>: <span class="muted">${buyer.remarks}</span></div>`;
+  }
+  buyerCard.innerHTML = buyerHtml;
+  c.appendChild(buyerCard);
 
-      setStep(3);
-      updateRecipientStepLabel();
-    };
+  const recipCard = document.createElement('div');
+  recipCard.className = 'card';
+  let recipHtml = '<h3>送り先情報</h3>';
+  recipHtml += `<div><strong>氏名</strong>: <span class="muted">${recip.name}</span></div>`;
+  recipHtml += `<div><strong>電話</strong>: <span class="muted">${recip.tel || '-'}</span></div>`;
+  // ★タイポ修正：reciqp → recip
+  recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + recip.addr4 : ''}</span></div>`;
+  recipCard.innerHTML = recipHtml;
+  c.appendChild(recipCard);
+
+  const prodCard = document.createElement('div');
+  prodCard.className = 'card';
+  let prodHtml = '<h3>商品情報</h3>';
+  prodHtml += `<div><strong>品種</strong>: <span class="muted">${prod.modal_product_name}</span></div>`;
+  prodHtml += `<div><strong>等級1</strong>: <span class="muted">${prod.modal_grade1}</span></div>`;
+  prodHtml += `<div><strong>等級2</strong>: <span class="muted">${prod.modal_grade}</span></div>`;
+  prodHtml += `<div><strong>サイズ</strong>: <span class="muted">${prod.modal_size || '-'}</span></div>`;
+  prodHtml += `<div><strong>重量</strong>: <span class="muted">${prod.modal_weight}</span></div>`;
+  prodHtml += `<div><strong>箱数</strong>: <span class="muted">${prod.modal_box_count}</span></div>`;
+  prodHtml += `<div><strong>合計</strong>: <span class="muted">${prod.total}</span></div>`;
+  prodCard.innerHTML = prodHtml;
+  c.appendChild(prodCard);
+
+  setStep(3);
+  updateRecipientStepLabel();
+};
 
     // B等級はサイズ無効
     document.getElementById('modal-grade').addEventListener('change', (e)=>{
@@ -467,32 +472,27 @@
 
     // ===== FINAL CHECK NAVIGATION (DEMO) =====
 document.getElementById('final-check').onclick = () => {
+  upsertAndGoFinal();
+};
+
+function upsertAndGoFinal() {
   const buyer = collectBuyer();
   const recip = collectRecipient();
   const prod  = collectProduct();
   const last  = { buyer, recipient: recip, product: prod };
 
-  const editIndex = sessionStorage.getItem('editIndex');
-
-  if (editIndex !== null) {
-    // 既存データの差し替え
-    orders[parseInt(editIndex, 10)] = last;
-    sessionStorage.removeItem('editIndex');
+  if (EDIT_MODE) {
+    const idx = parseInt(EDIT_INDEX, 10);
+    if (!isNaN(idx)) { orders[idx] = last; }
+    sessionStorage.removeItem('editIndex'); // 編集完了
   } else {
-    // 新規追加
-    if (!orders.length || JSON.stringify(orders[orders.length-1]) !== JSON.stringify(last)) {
-      orders.push(last);
-    }
+    orders.push(last);
   }
 
-  // セッションに保存
   sessionStorage.setItem('buyer', JSON.stringify(buyer));
   sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
-
-  // 最終確認ページへ
   location.href = 'final-check.html';
-};
-    // ===== FINAL CHECK NAVIGATION (DEMO) =====
+}
 
     // 注文者情報を送付先にコピー
     document.getElementById('copy-buyer').addEventListener('click', ()=>{
