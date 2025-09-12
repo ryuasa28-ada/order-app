@@ -83,26 +83,29 @@
         </div>
         <div>
           <label><span class="req">必須</span>電話番号（ハイフン無）</label>
-          <input id="phone-number" name="phone_number"
-              inputmode="numeric"
+            <input id="phone-number" name="phone_number"
+              inputmode="numeric" maxlength="11"
               pattern="^\d{10,11}$"
               title="半角数字10〜11桁で入力してください"
-              placeholder="09012345678" required />
+              placeholder="09012345678"
+              oninput="enforceDigits(this, 11)" required />
         </div>
         <div>
           <label><span class="req">必須</span>メールアドレス</label>
-          <input id="email" name="email" type="email" inputmode="email"
+            <input id="email" name="email" type="email" inputmode="email"
+              spellcheck="false" autocapitalize="off" autocomplete="email"
               pattern="^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$"
               title="半角英数字のメールアドレスを入力してください"
-              required />
+              oninput="normalizeEmail(this)" required />
         </div>
         <div>
           <label><span class="req">必須</span>郵便番号（7桁）</label>
           <input id="postal-code" name="postal_code"
-                inputmode="numeric"
-                pattern="^\d{7}$"
-                title="半角数字7桁で入力してください"
-                placeholder="1234567" required />
+              inputmode="numeric" maxlength="7"
+              pattern="^\d{7}$"
+              title="半角数字7桁で入力してください"
+              placeholder="1234567"
+  oninput="enforceDigits(this, 7)" required />
             <button type="button" class="btn btn-ghost" id="address-search">住所検索</button>
           </div>
         </div>
@@ -144,12 +147,13 @@
           <input id="modal-destination-name" maxlength="16" required />
         </div>
         <div>
-          <label>送り先 電話（任意）</label>
+          <label>送り先 電話（注文者でも可）</label>
           <input id="modal-destination-phone-number"
-                inputmode="numeric"
-                pattern="^\d{10,11}$"
-                title="半角数字10〜11桁で入力してください"
-                placeholder="09012345678" />
+            inputmode="numeric" maxlength="11"
+            pattern="^\d{10,11}$"
+            title="半角数字10〜11桁で入力してください"
+            placeholder="09012345678"
+            oninput="enforceDigits(this, 11)" />
         </div>
         <div class="right">
           <button type="button" class="btn btn-ghost" id="copy-buyer">注文者と同じ</button>
@@ -158,10 +162,11 @@
           <label><span class="req">必須</span>送り先 郵便番号（7桁）</label>
           <div style="display:flex; gap:8px; align-items:center;">
           <input id="modal-destination-postal-code"
-                inputmode="numeric"
-                pattern="^\d{7}$"
-                title="半角数字7桁で入力してください"
-                placeholder="1234567" required />
+            inputmode="numeric" maxlength="7"
+            pattern="^\d{7}$"
+            title="半角数字7桁で入力してください"
+            placeholder="1234567"
+            oninput="enforceDigits(this, 7)" required />
             <button type="button" class="btn btn-ghost" onclick="getAddress('modal-destination-postal-code','modal-destination-prefecture','modal-destination-city','modal-destination-address-details')">住所検索</button>
           </div>
         </div>
@@ -179,7 +184,7 @@
         </div>
         <div>
           <label>送り先 住所４（建物名・部屋番号）</label>
-          <input id="modal-destination-building" maxlength="16" placeholder="マンション名・部屋番号" />
+<input id="modal-destination-building" maxlength="16" placeholder="マンション名・部屋番号" />
         </div>
       </div>
       <div class="nav">
