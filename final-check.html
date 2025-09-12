@@ -77,7 +77,7 @@
 </div>
 <div class="app">
   <header>
-    <div class="logo">Takara Style</div>
+    <div class="logo">山本農園</div>
     <div class="row">
       <button class="btn" onclick="history.back()">← 戻る</button>
       <button class="btn btn-primary" id="btn-submit">この内容で送信（デモ）</button>
@@ -94,7 +94,7 @@
         <button class="btn" id="addMore">＋ 送り先を追加</button>
         <button class="btn" id="editOnIndex">この送り先を編集</button>
         <button class="btn btn-danger" id="delete">削除</button>
-        <button class="btn" id="toggleConfirm">確定にする/外す</button>
+        <!-- <button class="btn" id="toggleConfirm">確定にする/外す</button> -->
       </div>
     </aside>
 
@@ -244,12 +244,12 @@ el('#delete').onclick = ()=>{
   renderAll();
 };
 
-el('#toggleConfirm').onclick = ()=>{
-  if(!orders[current]) return;
-  orders[current].confirmed = !orders[current].confirmed;
-  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
-  renderAll();
-};
+// el('#toggleConfirm').onclick = ()=>{
+//   if(!orders[current]) return;
+//   orders[current].confirmed = !orders[current].confirmed;
+//   sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
+//   renderAll();
+// };
 
 // 送信（デモ）
 document.getElementById('btn-submit').onclick = ()=>{
