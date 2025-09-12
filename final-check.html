@@ -102,25 +102,21 @@ function el(sel){ return document.querySelector(sel); }
 function div(html){ const d=document.createElement('div'); d.innerHTML=html; return d.firstElementChild; }
 
 // ===== ここから追加：index.html へ戻すナビ関数 =====
-function goIndex({ startAt = 'recipient', editIndex = null, addNew = false } = {}) {
-  // 現在の内容を保存
+function goIndex({ startAt = 'recipient', editIndex = null, addNew = false, buyerEdit = false } = {}) {
   sessionStorage.setItem('buyer', JSON.stringify(buyer));
   sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
 
-  // 開始ステップヒント（buyer / recipient）
   if (startAt) sessionStorage.setItem('startAt', startAt); else sessionStorage.removeItem('startAt');
-
-  // 編集対象（送り先の配列 index）
   if (editIndex !== null && editIndex !== undefined) {
     sessionStorage.setItem('editIndex', String(editIndex));
   } else {
     sessionStorage.removeItem('editIndex');
   }
-
-  // 新規追加フラグ（必要なら index.html 側で参照）
   if (addNew) sessionStorage.setItem('addNew', 'true'); else sessionStorage.removeItem('addNew');
+// ★ 注文者編集フラグ
+  if (buyerEdit) sessionStorage.setItem('buyerEdit', '1');
+  else sessionStorage.removeItem('buyerEdit');
 
-  // 遷移
   location.href = 'index.html';
 }
 // ===== 追加ここまで =====
@@ -195,7 +191,7 @@ el('#editOnIndex').onclick = ()=>{
 
 el('#editBuyer').onclick = ()=>{
   // 注文者の編集：index.html を注文者ステップから開始
-  goIndex({ startAt: 'buyer' });
+  goIndex({ startAt: 'buyer', buyerEdit: true });
 };
 
 el('#delete').onclick = ()=>{
