@@ -16,7 +16,7 @@
     header .logo{font-weight:700;letter-spacing:.02em;color:#fff;background:var(--brand);padding:10px 14px;border-radius:10px}
 
     /* stepper */
-    .stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 20px}
+    .stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 20px}
     .step{
       position:relative;background:#eaeaea;color:#777;border-radius:999px;padding:12px 16px;text-align:center;font-weight:600
     }
@@ -72,7 +72,6 @@
     <section class="card step-pane" data-step="0">
       <h2>注文者情報</h2>
       <div class="right" style="margin-top:-8px;">
-        <!-- DEMO: 注文者データ自動入力 -->
         <button type="button" class="btn btn-ghost" id="demo-buyer-fill">デモ入力（注文者）</button>
       </div>
       <div class="grid g2">
@@ -93,7 +92,7 @@
         <div>
           <label><span class="req">必須</span>郵便番号（7桁）</label>
           <div style="display:flex; gap:8px; align-items:center;">
-              <input id="postal-code" name="postal_code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" required />
+            <input id="postal-code" name="postal_code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" required />
             <button type="button" class="btn btn-ghost" id="address-search">住所検索</button>
           </div>
         </div>
@@ -127,7 +126,6 @@
     <section class="card step-pane hidden" data-step="1">
       <h2>送付先</h2>
       <div class="right" style="margin-top:-8px;">
-        <!-- DEMO: 送付先データ自動入力 -->
         <button type="button" class="btn btn-ghost" id="demo-recipient-fill">デモ入力（送付先）</button>
       </div>
       <div class="grid g2">
@@ -282,9 +280,9 @@
     function clearRecipientAndProduct(){
       ['modal-destination-name','modal-destination-phone-number','modal-destination-postal-code','modal-destination-prefecture','modal-destination-city','modal-destination-address-details','modal-destination-building']
         .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
-  ['modal-product-name','modal-grade1','modal-grade','modal-size','modal-weight','modal-box-count']
+      ['modal-product-name','modal-grade1','modal-grade','modal-size','modal-weight','modal-box-count']
         .forEach(id => { const el=document.getElementById(id); if (el) el.value=''; });
-  document.getElementById('modal-box-count').value = '1';
+      document.getElementById('modal-box-count').value = '1';
       recalc();
     }
 
@@ -397,7 +395,7 @@
       let recipHtml = '<h3>送り先情報</h3>';
       recipHtml += `<div><strong>氏名</strong>: <span class="muted">${recip.name}</span></div>`;
       recipHtml += `<div><strong>電話</strong>: <span class="muted">${recip.tel || '-'}</span></div>`;
-      recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + recip.addr4 : ''}</span></div>`;
+      recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + reciqp.addr4 : ''}</span></div>`;
       recipCard.innerHTML = recipHtml;
       c.appendChild(recipCard);
 
@@ -434,12 +432,19 @@
       const total = (priceMap[w]||0)*n;
       document.getElementById('total').textContent =
         total.toLocaleString('ja-JP',{style:'currency',currency:'JPY',minimumFractionDigits:0});
-      // hidden input: numeric value without comma
       const hidden = document.getElementById('modal-estimated-cost');
       if(hidden) hidden.value = String(total);
     }
     ['modal-weight','modal-box-count'].forEach(id=>document.getElementById(id).addEventListener('change', recalc));
     recalc();
+
+    // 住所検索（注文者）ボタン紐付け（address-autofill.js に getAddress がある想定）
+    const addrBtn = document.getElementById('address-search');
+    if (addrBtn && typeof getAddress === 'function') {
+      addrBtn.addEventListener('click', () => {
+        getAddress('postal-code','prefecture','city','address-details');
+      });
+    }
 
     // 確認→戻る
     document.getElementById('back-3').onclick = ()=> setStep(2);
@@ -457,22 +462,22 @@
       setStep(1);
     });
 
-// ===== FINAL CHECK NAVIGATION (DEMO) =====
-document.getElementById('final-check').onclick = () => {
-  // 直近の編集中データを orders に取り込む
-  const last = { buyer: collectBuyer(), recipient: collectRecipient(), product: collectProduct() };
-  if (!orders.length || JSON.stringify(orders[orders.length-1]) !== JSON.stringify(last)) {
-    orders.push(last);
-  }
+    // ===== FINAL CHECK NAVIGATION (DEMO) =====
+    document.getElementById('final-check').onclick = () => {
+      // 直近の編集中データを orders に取り込む
+      const last = { buyer: collectBuyer(), recipient: collectRecipient(), product: collectProduct() };
+      if (!orders.length || JSON.stringify(orders[orders.length-1]) !== JSON.stringify(last)) {
+        orders.push(last);
+      }
 
-  // セッションに保存（PHP 化時はここでサーバへPOST想定）
-  sessionStorage.setItem('buyer', JSON.stringify(collectBuyer()));
-  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
+      // セッションに保存（PHP 化時はここでサーバへPOST想定）
+      sessionStorage.setItem('buyer', JSON.stringify(collectBuyer()));
+      sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
 
-  // 最終確認ページへ
-  location.href = 'final-check.html';
-};
-// ===== FINAL CHECK NAVIGATION (DEMO) =====
+      // 最終確認ページへ
+      location.href = 'final-check.html';
+    };
+    // ===== FINAL CHECK NAVIGATION (DEMO) =====
 
     // 注文者情報を送付先にコピー
     document.getElementById('copy-buyer').addEventListener('click', ()=>{
@@ -484,9 +489,9 @@ document.getElementById('final-check').onclick = () => {
       document.getElementById('modal-destination-address-details').value = document.getElementById('address-details').value;
       document.getElementById('modal-destination-building').value = document.getElementById('building').value;
     });
-    // ===== DEMO AUTO-FILL (UI only, will be removed/merged when PHP is integrated) =====
+
+    // ===== DEMO AUTO-FILL =====
     function demoFillBuyer() {
-      // 注文者：入力チェックしやすい妥当なダミー値
       document.getElementById('name').value = '安達 隆之介';
       document.getElementById('phone-number').value = '09042177478';
       document.getElementById('email').value = 'demo@example.com';
@@ -498,9 +503,7 @@ document.getElementById('final-check').onclick = () => {
       const rmk = document.getElementById('remarks');
       if (rmk) rmk.value = 'テスト送信です（このメモは任意）';
     }
-
     function demoFillRecipient() {
-      // 送付先：電話は任意なので空でもOK
       document.getElementById('modal-destination-name').value = '安達 隆之介';
       document.getElementById('modal-destination-phone-number').value = '09042177478';
       document.getElementById('modal-destination-postal-code').value = '4328038';
@@ -509,14 +512,91 @@ document.getElementById('final-check').onclick = () => {
       document.getElementById('modal-destination-address-details').value = '紅狐町中川15388-16';
       document.getElementById('modal-destination-building').value = 'VISTAGE 82-36';
     }
-
-    // Buttons
     const btnDemoBuyer = document.getElementById('demo-buyer-fill');
     if (btnDemoBuyer) btnDemoBuyer.addEventListener('click', demoFillBuyer);
-
     const btnDemoRecip = document.getElementById('demo-recipient-fill');
     if (btnDemoRecip) btnDemoRecip.addEventListener('click', demoFillRecipient);
     // ===== END DEMO AUTO-FILL =====
+
+    // ===== 復元処理 =====
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedBuyer  = JSON.parse(sessionStorage.getItem('buyer') || 'null');
+      const savedOrders = JSON.parse(sessionStorage.getItem('ordersDraft') || '[]');
+      const startAt     = sessionStorage.getItem('startAt');
+      const editIndex   = sessionStorage.getItem('editIndex');
+
+      // buyer をフォームへ反映
+      if (savedBuyer) {
+        const map = {
+          name:'name', phone_number:'phone-number', email:'email',
+          postal_code:'postal-code', prefecture:'prefecture', city:'city',
+          address_details:'address-details', building:'building', remarks:'remarks'
+        };
+        Object.entries(map).forEach(([k,id])=>{
+          if (document.getElementById(id) && savedBuyer[k] !== undefined) {
+            document.getElementById(id).value = savedBuyer[k];
+          }
+        });
+      }
+
+      // orders を復元
+      if (Array.isArray(savedOrders) && savedOrders.length) {
+        orders.splice(0, orders.length, ...savedOrders);
+      }
+
+      // 編集モード or 新規追加
+      if (editIndex !== null) {
+        const idx = parseInt(editIndex, 10);
+        const target = savedOrders[idx];
+        if (target) {
+          // recipient 復元
+          const rmap = {
+            name:'modal-destination-name',
+            tel:'modal-destination-phone-number',
+            zip:'modal-destination-postal-code',
+            pref:'modal-destination-prefecture',
+            city:'modal-destination-city',
+            addr3:'modal-destination-address-details',
+            addr4:'modal-destination-building'
+          };
+          Object.entries(rmap).forEach(([k,id])=>{
+            if (document.getElementById(id) && target.recipient[k] !== undefined) {
+              document.getElementById(id).value = target.recipient[k];
+            }
+          });
+
+          // product 復元
+          const pmap = {
+            modal_product_name:'modal-product-name',
+            modal_grade1:'modal-grade1',
+            modal_grade:'modal-grade',
+            modal_size:'modal-size',
+            modal_weight:'modal-weight',
+            modal_box_count:'modal-box-count'
+          };
+          Object.entries(pmap).forEach(([k,id])=>{
+            if (document.getElementById(id) && target.product[k] !== undefined) {
+              document.getElementById(id).value = target.product[k];
+              document.getElementById(id).dispatchEvent(new Event('change', {bubbles:true}));
+            }
+          });
+          recalc();
+        }
+        setStep(1); // recipient ステップへ
+      } else if (startAt === 'recipient') {
+        // 新規追加
+        clearRecipientAndProduct();
+        recipientIndex = savedOrders.length + 1;
+        updateRecipientStepLabel();
+        setStep(1);
+      } else if (startAt === 'buyer') {
+        setStep(0);
+      }
+
+      // 一度使ったフラグは削除（final 側で設定）
+      sessionStorage.removeItem('startAt');
+      sessionStorage.removeItem('editIndex');
+    });
   </script>
 </body>
 </html>
