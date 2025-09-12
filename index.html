@@ -362,12 +362,25 @@
     }
 
     // 次へ／戻る
-    document.getElementById('next-0').onclick = ()=>{
-      if(!checkStep0()) { alert('必須項目を入力してください'); return; }
-      setStep(1);
-    };
+document.getElementById('next-0').onclick = ()=>{
+  if(!checkStep0()) { alert('必須項目を入力してください'); return; }
+
+  if (sessionStorage.getItem('buyerEdit')) {
+    // ★ 全ての送り先に buyer 情報を反映
+    const buyer = collectBuyer();
+    orders.forEach((o, i)=> {
+      orders[i].buyer = buyer;
+    });
+    sessionStorage.setItem('buyer', JSON.stringify(buyer));
+    sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
+    sessionStorage.removeItem('buyerEdit'); // 編集完了フラグを消す
+    location.href = 'final-check.html'; // 最終確認へ直行
+  } else {
+    setStep(1); // 通常モード
+  }
+};
     document.getElementById('back-1').onclick = ()=> setStep(0);
-    
+
 // ---- 送付先の次へ ----
 document.getElementById('next-1').onclick = ()=>{
   if(!checkStep1()) { alert('送付先の必須を入力してください'); return; }
