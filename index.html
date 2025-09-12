@@ -143,21 +143,21 @@
         <div>
           <label><span class="req">必須</span>送り先 郵便番号（7桁）</label>
           <div style="display:flex; gap:8px; align-items:center;">
-            <input id="modal-destination-postal-code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" />
+            <input id="modal-destination-postal-code" inputmode="numeric" pattern="[0-9]{7}" placeholder="1234567" required />
             <button type="button" class="btn btn-ghost" onclick="getAddress('modal-destination-postal-code','modal-destination-prefecture','modal-destination-city','modal-destination-address-details')">住所検索</button>
           </div>
         </div>
         <div>
           <label><span class="req">必須</span>送り先 都道府県</label>
-          <input id="modal-destination-prefecture" />
+          <input id="modal-destination-prefecture" required />
         </div>
         <div>
           <label><span class="req">必須</span>送り先 市区町村</label>
-          <input id="modal-destination-city" />
+          <input id="modal-destination-city" required />
         </div>
         <div>
           <label><span class="req">必須</span>送り先 住所３（番地）</label>
-          <input id="modal-destination-address-details" />
+          <input id="modal-destination-address-details" required />
         </div>
         <div>
           <label>送り先 住所４（建物名・部屋番号）</label>
@@ -346,7 +346,10 @@
     }
     function checkStep1(){
       const ids = ['modal-destination-name','modal-destination-postal-code','modal-destination-prefecture','modal-destination-city','modal-destination-address-details'];
-      return ids.every(id => document.getElementById(id).value.trim() !== '');
+      const filled = ids.every(id => (document.getElementById(id).value || '').trim() !== '');
+      if (!filled) return false;
+      const zip = (document.getElementById('modal-destination-postal-code').value || '').trim();
+      return /^\d{7}$/.test(zip);
     }
     function checkStep2(){
       const ids = ['modal-product-name','modal-grade1','modal-grade','modal-weight','modal-box-count'];
@@ -395,7 +398,7 @@
       let recipHtml = '<h3>送り先情報</h3>';
       recipHtml += `<div><strong>氏名</strong>: <span class="muted">${recip.name}</span></div>`;
       recipHtml += `<div><strong>電話</strong>: <span class="muted">${recip.tel || '-'}</span></div>`;
-      recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + reciqp.addr4 : ''}</span></div>`;
+      recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + recip.addr4 : ''}</span></div>`;
       recipCard.innerHTML = recipHtml;
       c.appendChild(recipCard);
 
