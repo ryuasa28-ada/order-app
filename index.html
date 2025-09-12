@@ -367,17 +367,25 @@
       setStep(1);
     };
     document.getElementById('back-1').onclick = ()=> setStep(0);
-    document.getElementById('next-1').onclick = ()=>{
+    
+// ---- 送付先の次へ ----
+document.getElementById('next-1').onclick = ()=>{
   if(!checkStep1()) { alert('送付先の必須を入力してください'); return; }
-  if (EDIT_MODE) { upsertAndGoFinal(); return; }  // ★編集中は直行
+  // ★編集モードでも商品ステップへ進ませる
   setStep(2);
 };
 
+// ---- 商品の次へ ----
 document.getElementById('next-2').onclick = ()=>{
   if(!checkStep2()) { alert('商品の必須を入力してください'); return; }
-  if (EDIT_MODE) { upsertAndGoFinal(); return; }  // ★編集中は直行
 
-  // （通常モードのみ：プレビュー用の確認カード生成）
+  if (EDIT_MODE) {
+    // ★編集モードはここで差し替え保存して最終確認へ
+    upsertAndGoFinal();
+    return;
+  }
+
+  // （通常モードのみ：確認カードを作ってステップ4へ）
   const c = document.getElementById('confirm');
   c.innerHTML = '';
 
@@ -403,7 +411,6 @@ document.getElementById('next-2').onclick = ()=>{
   let recipHtml = '<h3>送り先情報</h3>';
   recipHtml += `<div><strong>氏名</strong>: <span class="muted">${recip.name}</span></div>`;
   recipHtml += `<div><strong>電話</strong>: <span class="muted">${recip.tel || '-'}</span></div>`;
-  // ★タイポ修正：reciqp → recip
   recipHtml += `<div><strong>住所</strong>: <span class="muted">${recip.pref}${recip.city}${recip.addr3}${recip.addr4 ? ' ' + recip.addr4 : ''}</span></div>`;
   recipCard.innerHTML = recipHtml;
   c.appendChild(recipCard);
