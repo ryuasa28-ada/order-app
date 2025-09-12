@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>最終確認（デモ）</title>
+<title>注文フォーム（デモ）</title>
 <style>
   :root{
     --brand:#3c3a38;--ink:#111;--muted:#666;--card:#fff;--bg:#fafafa;
@@ -106,28 +106,6 @@ function calcGrandTotal(){
 function el(sel){ return document.querySelector(sel); }
 function div(html){ const d=document.createElement('div'); d.innerHTML=html; return d.firstElementChild; }
 
-// ===== DEMO: index.html へ戻るためのユーティリティ =====
-function goIndex({ startAt = 'recipient', editIndex = null, addNew = false } = {}) {
-  sessionStorage.setItem('buyer', JSON.stringify(buyer));
-  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
-  sessionStorage.setItem('startAt', startAt); // 'buyer' | 'recipient'
-  if (editIndex !== null) {
-    sessionStorage.setItem('editIndex', String(editIndex)); // 編集対象（送り先）index
-  } else {
-    sessionStorage.removeItem('editIndex');
-  }
-  // ハッシュは UI の目印（index.html 側で参照している場合のために残す）
-  if (addNew) {
-    location.href = 'index.html#add';
-  } else if (editIndex !== null) {
-    location.href = 'index.html#edit';
-  } else if (startAt === 'buyer') {
-    location.href = 'index.html#buyer';
-  } else {
-    location.href = 'index.html';
-  }
-}
-
 // ===== DEMO: 描画 =====
 function renderBuyer(){
   const html = `
@@ -219,8 +197,8 @@ el('#toggleConfirm').onclick = ()=>{
   renderAll();
 };
 
-el('#btn-submit').onclick = ()=>{
-  // DEMO: 送信風。後で fetch/POST に置換
+// 送信（デモ）
+document.getElementById('btn-submit').onclick = ()=>{
   console.log('SUBMIT PAYLOAD', { buyer, orders });
   alert('この内容で送信（デモ）\n\n※本番ではここでサーバにPOSTします。');
 };
