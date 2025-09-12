@@ -88,25 +88,44 @@ let orders = JSON.parse(sessionStorage.getItem('ordersDraft') || '[]');
 // UI state
 let current = 0;
 
-// ===== DEMO: ユーティリティ =====
+// ===== ユーティリティ =====
 const yen = n => (n||0).toLocaleString('ja-JP',{style:'currency',currency:'JPY',minimumFractionDigits:0});
 
 function calcOrderTotal(o){
-  // index.html の簡易価格マップと揃える（本番はサーバ計算）
   const map = { '5kg':3500, '10kg':7000, '15kg':10500 };
   const w = o?.product?.modal_weight;
   const n = parseInt(o?.product?.modal_box_count || '0', 10);
   return (map[w] || 0) * n;
 }
-
-function calcGrandTotal(){
-  return orders.reduce((sum,o)=> sum + calcOrderTotal(o), 0);
-}
-
+function calcGrandTotal(){ return orders.reduce((sum,o)=> sum + calcOrderTotal(o), 0); }
 function el(sel){ return document.querySelector(sel); }
 function div(html){ const d=document.createElement('div'); d.innerHTML=html; return d.firstElementChild; }
 
-// ===== DEMO: 描画 =====
+// ===== ここから追加：index.html へ戻すナビ関数 =====
+function goIndex({ startAt = 'recipient', editIndex = null, addNew = false } = {}) {
+  // 現在の内容を保存
+  sessionStorage.setItem('buyer', JSON.stringify(buyer));
+  sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
+
+  // 開始ステップヒント（buyer / recipient）
+  if (startAt) sessionStorage.setItem('startAt', startAt); else sessionStorage.removeItem('startAt');
+
+  // 編集対象（送り先の配列 index）
+  if (editIndex !== null && editIndex !== undefined) {
+    sessionStorage.setItem('editIndex', String(editIndex));
+  } else {
+    sessionStorage.removeItem('editIndex');
+  }
+
+  // 新規追加フラグ（必要なら index.html 側で参照）
+  if (addNew) sessionStorage.setItem('addNew', 'true'); else sessionStorage.removeItem('addNew');
+
+  // 遷移
+  location.href = 'index.html';
+}
+// ===== 追加ここまで =====
+
+// ===== 描画 =====
 function renderBuyer(){
   const html = `
     <div class="kv"><b>氏名</b>${buyer.name || '-'}</div>
@@ -162,22 +181,20 @@ function renderDetail(){
 
 function renderAll(){ renderList(); renderDetail(); }
 
-// ===== DEMO: 操作ボタン =====
+// ===== 操作ボタン =====
 el('#addMore').onclick = ()=>{
-  // 送り先の追加。index.html 側は startAt='recipient' を見て 送付先ステップから開始し、
-  // 既存件数（orders.length）をベースに「n+1件目」として登録させる想定。
+  // 送付先の追加：index.html を送付先ステップから開始、n+1件目として登録
   goIndex({ startAt: 'recipient', addNew: true });
 };
 
 el('#editOnIndex').onclick = ()=>{
   if(!orders[current]) return;
-  // 送り先の編集。index.html 側は editIndex を見て対象の送り先＆商品をフォームへ復元。
-  // さらに startAt='recipient' で送付先ステップから開始（＝注文者入力は飛ばす）。
+  // 送付先の編集：index.html 側で editIndex をもとに復元
   goIndex({ startAt: 'recipient', editIndex: current });
 };
 
-// 注文者を編集：index.html を 注文者ステップから開始（送り先フォームは触らない）
 el('#editBuyer').onclick = ()=>{
+  // 注文者の編集：index.html を注文者ステップから開始
   goIndex({ startAt: 'buyer' });
 };
 
@@ -185,7 +202,7 @@ el('#delete').onclick = ()=>{
   if(!orders[current]) return;
   if(!confirm('この送り先を削除しますか？')) return;
   orders.splice(current,1);
-  if(current >= orders.length) current = orders.length-1;
+  if(current >= orders.length) current = Math.max(0, orders.length-1);
   sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
   renderAll();
 };
