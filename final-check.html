@@ -100,7 +100,7 @@
 
     <!-- 右：詳細 -->
     <main class="card">
-      <h2>注文者情報</h2>
+      <h2>注文詳細</h2>
       <div id="buyerArea" class="kv"></div>
       <div class="row" id="buyerActions">
         <button class="btn" id="editBuyer">注文者を編集</button>
@@ -114,7 +114,7 @@
       <div class="hr"></div>
 
       <div class="row">
-        <div class="sum">総合計（見込み）: <span id="grandTotal">¥0</span></div>
+        <div class="sum">総合計（送料別）: <span id="grandTotal">¥0</span></div>
       </div>
     </main>
   </div>
@@ -211,7 +211,7 @@ function renderDetail(){
     <div class="kv"><b>サイズ</b>${p.modal_size || '-'}</div>
     <div class="kv"><b>重量</b>${p.modal_weight || '-'}</div>
     <div class="kv"><b>箱数</b>${p.modal_box_count || '-'}</div>
-    <div class="kv sum"><b>見込み金額</b>${yen(t)}</div>
+    <div class="kv sum"><b>金額（送料別）</b>${yen(t)}</div>
   `;
   el('#grandTotal').textContent = yen(calcGrandTotal());
 }
