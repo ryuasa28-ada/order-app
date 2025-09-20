@@ -519,22 +519,47 @@ document.getElementById('final-check').onclick = () => {
   upsertAndGoFinal();
 };
 
+// 追加：セッションフラグの取得
+const ADD_NEW   = sessionStorage.getItem('addNew') === 'true';
+const EDIT_IDX  = sessionStorage.getItem('editIndex'); // '0'.. or null
+
 function upsertAndGoFinal() {
   const buyer = collectBuyer();
   const recip = collectRecipient();
   const prod  = collectProduct();
   const last  = { buyer, recipient: recip, product: prod };
 
-  if (EDIT_MODE) {
-    const idx = parseInt(EDIT_INDEX, 10);
-    if (!isNaN(idx)) { orders[idx] = last; }
-    sessionStorage.removeItem('editIndex'); // 編集完了
+  // どこに書き込むか決める
+  let writeIndex = null;
+
+  if (EDIT_IDX !== null) {
+    // final-check から「編集として戻る」で来た
+    writeIndex = parseInt(EDIT_IDX, 10);
+  } else if (ADD_NEW) {
+    // final-check から「＋送り先を追加」で来た
+    writeIndex = orders.length;           // 末尾に新規
+  } else if (orders.length > 0) {
+    // フラグ無しで戻って来た（ブラウザバック等）
+    // → “直近の項目を編集していた” とみなして末尾を置換
+    writeIndex = orders.length - 1;
+  } else {
+    // 初回
+    writeIndex = 0;
+  }
+
+  // 置換 or 追加
+  if (writeIndex < orders.length) {
+    orders[writeIndex] = last;
   } else {
     orders.push(last);
   }
 
+  // セッションを更新 & フラグは消しておく（再突入で増殖しないように）
   sessionStorage.setItem('buyer', JSON.stringify(buyer));
   sessionStorage.setItem('ordersDraft', JSON.stringify(orders));
+  sessionStorage.removeItem('editIndex');
+  sessionStorage.removeItem('addNew');
+
   location.href = 'final-check.html';
 }
 
@@ -577,85 +602,105 @@ function upsertAndGoFinal() {
     if (btnDemoRecip) btnDemoRecip.addEventListener('click', demoFillRecipient);
     // ===== END DEMO AUTO-FILL =====
 
-    // ===== 復元処理 =====
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedBuyer  = JSON.parse(sessionStorage.getItem('buyer') || 'null');
-      const savedOrders = JSON.parse(sessionStorage.getItem('ordersDraft') || '[]');
-      const startAt     = sessionStorage.getItem('startAt');
-      const editIndex   = sessionStorage.getItem('editIndex');
+// ===== 復元処理（置き換え版） =====
+(function () {
+  // 小さなユーティリティ
+  const readJSON = (key, fallback) => {
+    try {
+      const raw = sessionStorage.getItem(key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch { return fallback; }
+  };
+  const readFlag = (key) => sessionStorage.getItem(key) === 'true';
+  const clearOnce = (...keys) => keys.forEach(k => sessionStorage.removeItem(k));
 
-      // buyer をフォームへ反映
-      if (savedBuyer) {
-        const map = {
-          name:'name', phone_number:'phone-number', email:'email',
-          postal_code:'postal-code', prefecture:'prefecture', city:'city',
-          address_details:'address-details', building:'building', remarks:'remarks'
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedBuyer   = readJSON('buyer', null);
+    const savedOrders  = readJSON('ordersDraft', []);
+    const startAt      = sessionStorage.getItem('startAt');   // 'buyer' | 'recipient' | null
+    const editIndexStr = sessionStorage.getItem('editIndex'); // '0','1',… | null
+    const addNew       = readFlag('addNew');                  // 任意フラグ
+
+    // --- buyer をフォームへ ---
+    if (savedBuyer) {
+      const map = {
+        name:'name', phone_number:'phone-number', email:'email',
+        postal_code:'postal-code', prefecture:'prefecture', city:'city',
+        address_details:'address-details', building:'building', remarks:'remarks'
+      };
+      Object.entries(map).forEach(([k,id]) => {
+        const el = document.getElementById(id);
+        if (el && savedBuyer[k] !== undefined) el.value = savedBuyer[k];
+      });
+    }
+
+    // --- orders を復元 ---
+    if (Array.isArray(savedOrders)) {
+      orders.splice(0, orders.length, ...savedOrders);
+    } else {
+      orders.splice(0, orders.length); // 壊れていた場合は空に
+    }
+
+    // --- 編集モード or 新規追加 or 既定 ---
+    const hasEdit = editIndexStr !== null && !Number.isNaN(+editIndexStr);
+    if (hasEdit) {
+      // 編集として復元
+      const idx = Math.max(0, Math.min(+editIndexStr, savedOrders.length - 1));
+      const target = savedOrders[idx];
+
+      if (target) {
+        // recipient 復元
+        const rmap = {
+          name:'modal-destination-name',
+          tel:'modal-destination-phone-number',
+          zip:'modal-destination-postal-code',
+          pref:'modal-destination-prefecture',
+          city:'modal-destination-city',
+          addr3:'modal-destination-address-details',
+          addr4:'modal-destination-building'
         };
-        Object.entries(map).forEach(([k,id])=>{
-          if (document.getElementById(id) && savedBuyer[k] !== undefined) {
-            document.getElementById(id).value = savedBuyer[k];
+        Object.entries(rmap).forEach(([k,id]) => {
+          const el = document.getElementById(id);
+          if (el && target.recipient && target.recipient[k] !== undefined) el.value = target.recipient[k];
+        });
+
+        // product 復元
+        const pmap = {
+          modal_product_name:'modal-product-name',
+          modal_grade1:'modal-grade1',
+          modal_grade:'modal-grade',
+          modal_size:'modal-size',
+          modal_weight:'modal-weight',
+          modal_box_count:'modal-box-count'
+        };
+        Object.entries(pmap).forEach(([k,id]) => {
+          const el = document.getElementById(id);
+          if (el && target.product && target.product[k] !== undefined) {
+            el.value = target.product[k];
+            // 依存UI（サイズ無効など）のため change 発火
+            el.dispatchEvent(new Event('change', { bubbles: true }));
           }
         });
+        recalc();
       }
+      setStep(1); // 送付先ステップへ
 
-      // orders を復元
-      if (Array.isArray(savedOrders) && savedOrders.length) {
-        orders.splice(0, orders.length, ...savedOrders);
-      }
+    } else if (startAt === 'recipient') {
+      // 新規追加・送付先から再開
+      if (addNew) clearRecipientAndProduct(); // 新規は空で開始
+      recipientIndex = savedOrders.length + 1;
+      updateRecipientStepLabel();
+      setStep(1);
 
-      // 編集モード or 新規追加
-      if (editIndex !== null) {
-        const idx = parseInt(editIndex, 10);
-        const target = savedOrders[idx];
-        if (target) {
-          // recipient 復元
-          const rmap = {
-            name:'modal-destination-name',
-            tel:'modal-destination-phone-number',
-            zip:'modal-destination-postal-code',
-            pref:'modal-destination-prefecture',
-            city:'modal-destination-city',
-            addr3:'modal-destination-address-details',
-            addr4:'modal-destination-building'
-          };
-          Object.entries(rmap).forEach(([k,id])=>{
-            if (document.getElementById(id) && target.recipient[k] !== undefined) {
-              document.getElementById(id).value = target.recipient[k];
-            }
-          });
+    } else {
+      // 'buyer' または未指定 → 最初のステップ
+      setStep(0);
+    }
 
-          // product 復元
-          const pmap = {
-            modal_product_name:'modal-product-name',
-            modal_grade1:'modal-grade1',
-            modal_grade:'modal-grade',
-            modal_size:'modal-size',
-            modal_weight:'modal-weight',
-            modal_box_count:'modal-box-count'
-          };
-          Object.entries(pmap).forEach(([k,id])=>{
-            if (document.getElementById(id) && target.product[k] !== undefined) {
-              document.getElementById(id).value = target.product[k];
-              document.getElementById(id).dispatchEvent(new Event('change', {bubbles:true}));
-            }
-          });
-          recalc();
-        }
-        setStep(1); // recipient ステップへ
-      } else if (startAt === 'recipient') {
-        // 新規追加
-        clearRecipientAndProduct();
-        recipientIndex = savedOrders.length + 1;
-        updateRecipientStepLabel();
-        setStep(1);
-      } else if (startAt === 'buyer') {
-        setStep(0);
-      }
-
-      // 一度使ったフラグは削除（final 側で設定）
-      sessionStorage.removeItem('startAt');
-      sessionStorage.removeItem('editIndex');
-    });
+    // 一度使ったフラグは必ず消す（戻る→再入場での増殖を防止）
+    clearOnce('startAt', 'editIndex', 'addNew');
+  });
+})();
   </script>
 </body>
 </html>
