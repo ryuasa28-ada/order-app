@@ -72,7 +72,8 @@
 
 <!-- ===== Mobile sticky CTA ===== -->
 <div class="mobile-cta" aria-label="送信操作">
-  <button class="btn" id="m-back">← 戻る</button>
+  <!-- header の戻る -->
+<button class="btn" id="btn-back">← 戻る</button>
   <button class="btn btn-primary" id="m-submit">この内容で送信（デモ）</button>
 </div>
 <div class="app">
@@ -262,9 +263,17 @@ renderBuyer();
 renderAll();
 
   // モバイルCTA → 既存ボタンに委譲
-  const mBack   = document.getElementById('m-back');
+ // 既存の goIndex はそのまま使えます
+document.getElementById('btn-back').onclick = () => {
+  goIndex({ startAt: 'recipient', editIndex: current });   // ★編集として戻す
+};
+
+// モバイル下部の戻るも同様に変更
+const mBack = document.getElementById('m-back');
+if (mBack) mBack.onclick = () => {
+  goIndex({ startAt: 'recipient', editIndex: current });   // ★
+};
   const mSubmit = document.getElementById('m-submit');
-  if (mBack)   mBack.onclick   = ()=> history.back();
   if (mSubmit) mSubmit.onclick = ()=> document.getElementById('btn-submit').click();
 </script>
 </body>
