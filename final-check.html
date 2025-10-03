@@ -252,10 +252,99 @@ el('#delete').onclick = ()=>{
 //   renderAll();
 // };
 
-// 送信（デモ）
-document.getElementById('btn-submit').onclick = ()=>{
-  console.log('SUBMIT PAYLOAD', { buyer, orders });
-  alert('この内容で送信（デモ）\n\n※本番ではここでサーバにPOSTします。');
+// ===== 送信（本番: submit.php へPOST） =====
+function buildPayloadForSubmit() {
+  const formData = {
+    name: buyer.name || '',
+    postal_code: buyer.postal_code || '',
+    prefecture: buyer.prefecture || '',
+    city: buyer.city || '',
+    address_details: buyer.address_details || '',
+    building: buyer.building || '',
+    phone_number: buyer.phone_number || '',
+    email: buyer.email || '',
+    remarks: buyer.remarks || '',
+    // セッションに orderType を入れていれば使う。無ければ NL
+    type: sessionStorage.getItem('orderType') || 'NL'
+  };
+
+  const destinations = (orders || []).map(o => {
+    const r = o?.recipient || {};
+    const p = o?.product   || {};
+    return {
+      name: r.name || '',
+      phoneNumber: r.tel || '',
+      postalCode: r.zip || '',
+      prefecture: r.pref || '',
+      city: r.city || '',
+      addressDetails: r.addr3 || '',
+      building: r.addr4 || '',
+      productName: p.modal_product_name || '',
+      // PHP 側の期待： grade1 = 等級1, grade = 等級2
+      grade1: p.modal_grade1 || '',
+      grade:  p.modal_grade  || '',
+      size:   p.modal_size   || '',
+      weight: p.modal_weight || '',
+      boxCount: String(p.modal_box_count || '1'),
+      // PHP は非数字を除去して整数化するので、通貨書式でOK
+      estimatedCost: yen(calcOrderTotal(o))
+    };
+  });
+  return { formData, destinations };
+}
+
+const btnSubmit = document.getElementById('btn-submit');
+btnSubmit.onclick = async () => {
+  if (!orders || orders.length === 0) {
+    alert('送り先がありません。最低1件追加してください。');
+    return;
+  }
+  // 簡易必須チェック（注文者の主要フィールド）
+  const must = ['name','phone_number','email','postal_code','prefecture','city','address_details'];
+  const missing = must.filter(k => !(buyer?.[k] || '').trim());
+  if (missing.length) {
+    alert('注文者の必須項目が未入力です。入力画面に戻ってご確認ください。');
+    return;
+  }
+
+  const payload = buildPayloadForSubmit();
+
+  // 送信中UI
+  const prevLabel = btnSubmit.textContent;
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = '送信中…';
+
+  try {
+    const res = await fetch('submit.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json.success === false) {
+      throw new Error(json.error || '送信に失敗しました');
+    }
+
+    alert(`送信が完了しました。注文番号: ${json.order_id}`);
+
+    // 成功時はセッションを掃除して完了ページへ
+    ['buyer','ordersDraft','startAt','editIndex','buyerEdit','addNew','orderType']
+      .forEach(k => sessionStorage.removeItem(k));
+
+    // サンクスページが無ければトップへ戻す
+    try {
+      location.href = 'thanks.html';
+    } catch (_) {
+      location.href = 'index.html';
+    }
+  } catch (err) {
+    console.error(err);
+    alert('エラー: ' + err.message);
+  } finally {
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = prevLabel;
+  }
 };
 
 // 初期描画
